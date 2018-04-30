@@ -115,56 +115,53 @@ if cont_locs_2D==1;
   
 end
 
-
-
-
-if isfield(sa,'grid_xcoarse');
+if isfield(sa,'grid_xcoarse')
   gg=sa.grid_xcoarse;
   [ng,ndum]=size(gg);
   sa_out.grid_xcoarse_indi=(gg-repmat(ryx,ng,1))*inv(Ayx);
 end
-if isfield(sa,'grid_coarse');
+if isfield(sa,'grid_coarse')
   gg=sa.grid_coarse;
   [ng,ndum]=size(gg);
   sa_out.grid_coarse_indi=(gg-repmat(ryx,ng,1))*inv(Ayx);
 end
-if isfield(sa,'grid_medium');
+if isfield(sa,'grid_medium')
   gg=sa.grid_medium;
   [ng,ndum]=size(gg);
   sa_out.grid_medium_indi=(gg-repmat(ryx,ng,1))*inv(Ayx);
   sa_out.L_medium=grid2L(sa_out.grid_medium_indi,sa_out.fp_indi);
 end
-if isfield(sa,'grid_fine');
+if isfield(sa,'grid_fine')
   gg=sa.grid_fine;
   [ng,ndum]=size(gg);
   sa_out.grid_fine_indi=(gg-repmat(ryx,ng,1))*inv(Ayx);
 end
-if isfield(sa,'grid_cortexhippo');
+if isfield(sa,'grid_cortexhippo')
   gg=sa.grid_cortexhippo;
   [ng,ndum]=size(gg);
   sa_out.grid_cortexhippo_indi=(gg-repmat(ryx,ng,1))*inv(Ayx);
 end
-if isfield(sa,'grid_cortex3000');
+if isfield(sa,'grid_cortex3000')
   gg=sa.grid_cortex3000;
   [ng,ndum]=size(gg);
   sa_out.grid_cortex3000_indi=(gg-repmat(ryx,ng,1))*inv(Ayx);
 end
-if isfield(sa,'grid_aal4mm');
+if isfield(sa,'grid_aal4mm')
   gg=sa.grid_aal4mm;
   [ng,ndum]=size(gg);
   sa_out.grid_aal4mm_indi=(gg-repmat(ryx,ng,1))*inv(Ayx);
 end
-if isfield(sa,'grid_aal4mm');
+if isfield(sa,'grid_aal4mm')
   gg=sa.grid_aal6mm;
   [ng,ndum]=size(gg);
   sa_out.grid_aal6mm_indi=(gg-repmat(ryx,ng,1))*inv(Ayx);
 end
-if isfield(sa,'grid_m758_4mm');
+if isfield(sa,'grid_m758_4mm')
   gg=sa.grid_m758_4mm;
   [ng,ndum]=size(gg);
   sa_out.grid_m758_4mm_indi=(gg-repmat(ryx,ng,1))*inv(Ayx);
 end
-if isfield(sa,'grid_m758_6mm');
+if isfield(sa,'grid_m758_6mm')
   gg=sa.grid_m758_6mm;
   [ng,ndum]=size(gg);
   sa_out.grid_m758_6mm_indi=(gg-repmat(ryx,ng,1))*inv(Ayx);
@@ -178,6 +175,11 @@ if isfield(sa,'grid_vtpm_6mm')
   gg=sa.grid_vtpm_6mm;
   [ng,ndum]=size(gg);
   sa_out.grid_vtpm_6mm_indi=(gg-repmat(ryx,ng,1))*inv(Ayx);
+end
+if isfield(sa,'cortex_brainstorm')
+  gg=sa.grid_cortex_brainstorm;
+  [ng,ndum]=size(gg);
+  sa_out.grid_cortex_brainstorm_indi=(gg-repmat(ryx,ng,1))*inv(Ayx);
 end
 
 [sa.grid_cortex_lowres] = select_chans(sa_out.grid_cortex3000,400);

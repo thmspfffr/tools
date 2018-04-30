@@ -117,6 +117,9 @@ elseif ndims(para.cs)==2
 %       load(para.sa);
       [~,A1] = mkfilt_lcmv(sa.L_medium,para.cs);
       A1 = getdipdir(para.cs,A1);  
+    elseif strcmp(para.grid,'L_aal_4mm')
+      [~,A1] = mkfilt_lcmv(sa.L_aal_4mm,para.cs);
+      A1 = getdipdir(para.cs,A1);  
     end
 
     % LCMV WITH CODE FROM JOERG

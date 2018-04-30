@@ -41,7 +41,7 @@ if ~(isempty(s.stat_neg) && isempty(s.stat_pos))
   % -----------------------------------------------------------------------
   % note that data is shuffled within find_cluster_sub (maybe change that)
   
-  for iperm = 1 : para.nperm;
+  for iperm = 1 : para.nperm
     
     fprintf('Permutation %d ...\n',iperm);
     
@@ -97,7 +97,7 @@ if ~(isempty(s.stat_neg) && isempty(s.stat_pos))
     tmp = find(s.p_pos<para.alpha);
     if ~isempty(tmp)
       for itmp = 1 : length(tmp)
-        s.mask(s.stat_pos{itmp}.chan) = 1;
+        s.mask(s.stat_pos{tmp(itmp)}.chan) = 1;
       end
     end
   end
@@ -105,7 +105,7 @@ if ~(isempty(s.stat_neg) && isempty(s.stat_pos))
     tmp = find(s.p_neg<para.alpha);
     if ~isempty(tmp)
       for itmp = 1 : length(tmp)
-        s.mask(s.stat_neg{itmp}.chan) = 1;
+        s.mask(s.stat_neg{tmp(itmp)}.chan) = 1;
       end
     end
   end
@@ -170,7 +170,7 @@ if ~(isempty(s.stat_neg) && isempty(s.stat_pos))
 
         else
         
-          for iperm = 1 : para.nperm;
+          for iperm = 1 : para.nperm
             
             para.perm = 1;
 
@@ -209,13 +209,9 @@ if ~(isempty(s.stat_neg) && isempty(s.stat_pos))
             
             fprintf('Significant cluster(s) found!\n') 
             
-            % NOW GO BACK UP AND REMOVE SHIT AGAIN
+            % NOW GO BACK UP AND REMOVE STUFF AGAIN
             
           end
-            
-            
-          
-
         end      
       end   
     end

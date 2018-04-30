@@ -1,6 +1,7 @@
 function [stats] = tp_permtest2D(x,y,para)
 % COMPUTES CLUSTER-BASED PERMUTATION TEST IN 2D
 % EXAMPLE: differences between two time series
+% input: N_SUBJ x N_FREQ/N_TIME/N_X
 % if ~exist(para)
 %   para.alpha      = 0.05;
 %   para.clustalpha = 0.05;
@@ -9,7 +10,6 @@ function [stats] = tp_permtest2D(x,y,para)
 %   para.nperm      = 10000;
 % end
 %
- 
     
 if ~isfield(para,'clusteralpha'); para.clusteralpha = 0.05; end
 if ~isfield(para,'alpha'); para.alpha = 0.05; end
@@ -24,11 +24,11 @@ df = size(x,2)-1;
 % EMPIRLCAL CLUSTERS
 % --------------------------------------------
 if para.tail       == 0
-  [~,p,~,s]=ttest(y,x,'dim',2,'alpha',para.clusteralpha/2);
+  [~,p,~,s]=ttest(x,y,'dim',2,'alpha',para.clusteralpha/2);
   para.thresh = abs(tinv(para.clusteralpha/2,df));
 else
   para.thresh = abs(tinv(para.clusteralpha,df));
-  [~,p,~,s]=ttest(y,x,'dim',2,'alpha',para.clusteralpha);
+  [~,p,~,s]=ttest(x,y,'dim',2,'alpha',para.clusteralpha);
 end
 
 sign = find( abs(s.tstat) > para.thresh );
@@ -62,6 +62,8 @@ end
 clear s i 
 %%
 if ~para.paired
+  
+  error('Unpaired test doesn''t work!')
   
   dat = [x(:,1);x(:,2)];
   
@@ -166,6 +168,7 @@ end
 stats.h = h;
 stats.p = cp;
 stats.clust = empclust;
+% stats.
 
 
 

@@ -53,9 +53,69 @@ end
   end
 
   atlas.grid_6mm = bc(atlas.tissue_6mm>0,:);
-  atlas.label_6mm = atlas.tissue_6mm(atlas.tissue_6mm>0)
+  atlas.label_6mm = atlas.tissue_6mm(atlas.tissue_6mm>0);
   
-
+%% IMPLEMENT AAL GRID HERE
+% -----------------------------------
   
+% 
+% aal = ft_read_atlas('~/Documents/MATLAB/fieldtrip-20160919/template/atlas/aal/ROI_MNI_V4.nii');
+% % get coordinates from voxel indices
+% ac=zeros(aal.dim(1)*aal.dim(2)*aal.dim(3),3);
+% 
+% ii=0;
+% for ix=1:aal.dim(1)
+%   for iy=1:aal.dim(2)
+%     for iz=1:aal.dim(3)
+%       ii=ii+1;
+%       r=[ix,iy,iz,1]';
+%       rc=aal.transform*r;
+%       ac(ii,:)=rc(1:3)';
+%       aal.tissue_2mm(ii) = aal.tissue(ix,iy,iz);
+%     end
+%   end
+% end
+% 
+% % subsample
+% ii=0;
+% for ix=1:3:aal.dim(1)
+%   for iy=1:3:aal.dim(2)
+%     for iz=1:3:aal.dim(3)
+%       ii=ii+1;
+%       r=[ix,iy,iz,1]';
+%       rc=aal.transform*r;
+%       bc(ii,:)=rc(1:3)';
+%       aal.tissue_6mm(ii) = aal.tissue(ix,iy,iz);
+%     end
+%   end
+% end
+% 
+% aal.grid_6mm = bc(aal.tissue_6mm>0&aal.tissue_6mm<=91,:);
+% 
+% clear bc
+% 
+% ii=0;
+% for ix=1:2:aal.dim(1)
+%   for iy=1:2:aal.dim(2)
+%     for iz=1:2:aal.dim(3)
+%       ii=ii+1;
+%       r=[ix,iy,iz,1]';
+%       rc=aal.transform*r;
+%       bc(ii,:)=rc(1:3)';
+%       aal.tissue_4mm(ii) = aal.tissue(ix,iy,iz);
+%     end
+%   end
+% end
+% 
+% aal.grid_4mm = bc(aal.tissue_4mm>0&aal.tissue_4mm<=91,:);
+% 
+% 
+% % compute center of mass of each AAL region
+% 
+% for i = 1 : size(aal.tissuelabel,2)
+%   
+%   aal.centroids(i,:) = mean(ac(aal.tissue==i,:));
+%   
+% end
 
 

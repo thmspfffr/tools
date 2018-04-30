@@ -1,4 +1,4 @@
-function [c, coh] = tp_powcorr_ortho_weight(data,para,sa)
+function [dfa] = tp_dfa_src_weighted(data,para,sa)
 
 % function computes orthogonalized amplitude envelope correlations and
 % phase coherence in source space (see hipp et al., 2012, nat. neurosci. for
@@ -36,27 +36,6 @@ data      = data/scale;
 
 switch para.wavelet
   
-  case 'hanning'
-    
-    nn    = (1:segleng)'-segleng/2;
-    mywin = hanning(segleng);
-    s1 = cos(nn*f*2*pi/fsample).*mywin;
-    s2 = sin(nn*f*2*pi/fsample).*mywin;
-    ss = s1-sqrt(-1)*s2;
-    ss = repmat(ss,1,nchan);
-    
-  case 'ft'
-    
-    para.fsample = fsample;
-    para.freqoi = f;
-    para.gwidth = 3;
-    para.width  = 7;
-    
-    w = tp_mkwavelet(para);
-    ss = repmat(w,1,nchan);
-    segleng = length(w);
-    segshift = floor(segleng/8);
-    
   case 'bp_filt'
     
     para.fsample = fsample;
@@ -151,39 +130,26 @@ for iep = 1 : nep
     
   elseif strcmp(para.filt,'eloreta')
     
-    pars      = [];
-    pars.filt = 'eloreta';
-    pars.cs   = cs;
-    pars.foi  = f;
-    pars.sa   = sa.sa;
-    if isfield(sa.sa,'L_coarse')
-      pars.grid = 'cortex';
-      pos = sa.sa.grid_cortex3000_indi;
-      load('~/Documents/MATLAB/aalmask_grid_cortex3000.mat')
-    elseif  isfield(sa.sa,'L_aal')
-      pars.grid = 'aal';
-    elseif strcmp(sa.sa.leadfield, 'L_medium')
-      pos = sa.sa.grid_medium_indi;
-      pars.grid = 'medium';
-      load ~/pconn/matlab/aalmask_grid_medium
-    elseif strcmp(sa.sa.leadfield, 'aal_6mm')
-      pars.grid = 'L_aal_6mm';
-      pos = sa.sa.grid_aal6mm_indi;
-    elseif strcmp(sa.sa.leadfield, 'aal_4mm')
-      pars.grid = 'L_aal_4mm';
-      pos = sa.sa.grid_aal4mm_indi;
-%     elseif strcmp(para.grid,'m758_4mm')
-%       pos	= sa.sa.grid_m758_4mm_indi;
-%       m758  = tp_m758_grid();
-%       sa.sa.aal_label = m758.tissue_4mm(m758.tissue_4mm>0);
-%     elseif strcmp(para.grid,'m758_6mm')
-% %       pos       = sa.sa.grid_m758_6mm_indi;
-% %       filt      = pconn_beamformer(cs,sa.sa.L_m758_6mm,para);
-% %       m758      = tp_m758_grid();
-%       sa.sa.aal_label = m758.tissue_4mm(m758.tissue_4mm>0);
-%     
-    end
-    filt      = get_spatfilt(pars);
+%     pars      = [];
+%     pars.filt = 'eloreta';
+%     pars.cs   = cs;
+%     pars.foi  = f;
+%     pars.sa   = sa.sa;
+%     if isfield(sa.sa,'L_coarse')
+%       pars.grid = 'cortex';
+%       pos = sa.sa.grid_cortex3000_indi;
+%       load('~/Documents/MATLAB/aalmask_grid_cortex3000.mat')
+%     elseif  isfield(sa.sa,'L_aal')
+%       pars.grid = 'aal';
+%     elseif isfield(sa.sa,'L_medium')
+%       pos = sa.sa.grid_medium_indi;
+%       pars.grid = 'medium';
+%       load ~/pconn/matlab/aalmask_grid_medium
+%     elseif isfield(sa.sa,'L_aal_6mm')
+%       pars.grid = 'L_aal_6mm';
+%       pos = sa.sa.grid_aal6mm_indi;
+%     end
+%     filt      = get_spatfilt(pars);
 %     filt      = filt(:,find(aalgrid.mask));
 %     pos       = pos(find(aalgrid.mask),:);
   end
@@ -238,130 +204,32 @@ for iep = 1 : nep
     end
     
   end
+  
   fprintf('AAL done ...\n')
   mom = aal_mom; clear aal_mom dloc1 filt tmp m758
-  
-  save('~/pmod_dat2.mat','mom')
-  
+    
   % COMPUTE CORRELATIONS BASED ON BAND-PASS FILTERED SIGNAL
   if strcmp(para.wavelet,'bp_filt')
     
     % make sure hilbert transform is applied in the right position
     for ireg = 1:size(mom,1)
-      mom(ireg,:) = hilbert(mom(ireg,:));
-    end
-    
-    %     mom = (hilbert(zscore(filtfilt(bfilt,afilt,mom'))))';
-    
-    if para.scnd_filt
-      
-      flp       = 0.02;           % lowpass frequency of filter
-      fhi       = 0.4;           % highpass
-      res       = 2;
-      delt      = 1/(fsample/res);            % sampling interval
-      k         = 2;                  % 2nd order butterworth filter
-      fnq       = 1/(2*delt);       % Nyquist frequency
-      Wn        = [flp/fnq fhi/fnq]; % butterworth bandpass non-dimensional frequency
-      [bf2,af2] = butter(k,Wn);   % construct the filter
-      
-      fprintf('Filter, resample, filter again ...\n')
-      
-      if res ~= 1
-        for il = 1 : size(mom,1)
-          rmom(il,:) = resample(abs(mom(il,:)),1,res);
-        end
-      end
-      
-      mom = rmom; clear rmom
-      mom = hilbert(zscore(filtfilt(bf2,af2,mom)));
-      
-      if para.tau == inf
-        segleng  = size(mom,2);
-      else
-        segleng  = para.tau*(fsample/res);
-      end
-      
-      segshift = segleng / 2;
-      epleng   = size(mom,2);
-      nseg     = floor((epleng-segleng)/segshift+1);
+      mom(ireg,:) = abs(hilbert(mom(ireg,:)));
       
     end
     
-    fprintf('Computing orth. amp. correlations ...\n')
-    
-    % define the tau for orthogonalizing
-    if nep == 1
-% 
-      for iseg = 1 : nseg
-        tmp_mom = double(mom(:,(iseg-1)*segshift+1:(iseg-1)*segshift+segleng));
-        % this one computes orthopowcorrs based on fieldtrip code
-        c(:,:,iseg) =  compute_orthopowcorr(tmp_mom);
-      end
-      c = nanmean(c,3); clear mom
-    else
-      c(:,:,iep) =  compute_orthopowcorr(mom); clear mom
-    end
-  else
-    
-    % DO STUFF HERE
   end
+      
+  dfa(iep,:) = tp_dfa(mom',[3 50],400,0.5,15);
+ 
 end
 
 
-function c = compute_orthopowcorr(mom,varargin)
 
-refindx = 'all'; clear tapvec
-tapvec  = ones(1,size(mom,2));
-
-if strcmp(refindx, 'all')
-  refindx = 1:size(mom,1);
-end
-
-cmomnorm = conj(mom./abs(mom)); % only need to do conj() once
-
-n        = size(mom,1);
-ntap     = 1;
-if ~all(tapvec==ntap)
-  error('unequal number of tapers per observation is not yet supported');
-end
-
-ix = zeros(sum(tapvec),1);
-jx = ix;
-sx = ix;
-
-for k = 1:numel(tapvec)
-  indx = (k-1)*ntap+(1:ntap);
-  ix(indx) = indx;
-  jx(indx) = k;
-  sx(indx) = 1./ntap;
-end
-
-tra = sparse(ix,jx,sx,sum(tapvec),numel(tapvec));
-
-powmom = (abs(mom).^2)*tra; % need only once
-powmom = standardise(log10(powmom), 2);
-
-c = zeros(n, numel(refindx));%;*2);
-N = ones(n,1);
-%warning off;
-for k = 1:numel(refindx)
-  indx     = refindx(k);
-  ref      = mom(indx,:);
-  crefnorm = conj(ref./abs(ref));
-  
-  pow2 = (abs(imag(ref(N,:).*cmomnorm)).^2)*tra;
-  pow2 = standardise(log10(pow2), 2);
-  c1   = mean(powmom.*pow2, 2);
-  pow1 = (abs(imag(mom.*crefnorm(N,:))).^2)*tra;
-  pow1 = standardise(log10(pow1), 2);
-  
-  pow2 = (abs(ref).^2)*tra;
-  pow2 = standardise(log10(pow2), 2);
-  pow2 = repmat(pow2, [n 1]);
-  c2   = mean(pow1.*pow2, 2);
-  
-  c(:,k) = (c1+c2)./2;
-  %c(:,k+numel(refindx)) = c2;
-end
-
-
+    
+    
+    
+    
+    
+    
+    
+    

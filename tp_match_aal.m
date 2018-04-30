@@ -15,7 +15,11 @@ switch para.grid
     load aalmask_grid_xcoarse
 end
 
-reg = unique(sort(aalgrid.mask(aalgrid.mask<=91)));
+if ~isfield(para,'N')
+  pars.N = 91;
+end
+
+reg = unique(sort(aalgrid.mask(aalgrid.mask<=para.N)));
 
 if reg(1) == 0
   reg = reg(2:end);

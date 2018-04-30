@@ -23,6 +23,9 @@ for ix=1:aal.dim(1)
   end
 end
 
+aal.grid_2mm = ac(aal.tissue_2mm>0&aal.tissue_2mm<=91,:);
+% 
+
 % subsample
 ii=0;
 for ix=1:3:aal.dim(1)
@@ -56,11 +59,8 @@ end
 
 aal.grid_4mm = bc(aal.tissue_4mm>0&aal.tissue_4mm<=91,:);
 
-
 % compute center of mass of each AAL region
-
-for i = 1 : size(aal.tissuelabel,2)
-  
-  aal.centroids(i,:) = mean(ac(aal.tissue==i,:));
-  
+% ----------------
+for i = 1 : 91
+  aal.centroids(i,:) = mean(aal.grid_2mm(aal.tissue_2mm(aal.tissue_2mm>0&aal.tissue_2mm<=91)==i,:));
 end

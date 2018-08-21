@@ -1,4 +1,4 @@
-function [mask,labels, ac] = tp_aalgrid()
+function [mask,labels, ac] = grid2aalmask()
 %function mask = grid2aalmask(atlas, grid)
 %
 % Looks up for each coordinate in grid which AAL regions a voxel is located

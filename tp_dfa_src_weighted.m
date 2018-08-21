@@ -1,4 +1,4 @@
-function [dfa] = tp_dfa_src_weighted(data,para,sa)
+function [dfa, acorr, lambda] = tp_dfa_src_weighted(data,para,sa)
 
 % function computes orthogonalized amplitude envelope correlations and
 % phase coherence in source space (see hipp et al., 2012, nat. neurosci. for
@@ -219,8 +219,21 @@ for iep = 1 : nep
     
   end
       
-  dfa(iep,:) = tp_dfa(mom',[3 50],400,0.5,15);
- 
+  dfa = tp_dfa(mom',[3 50],400,0.5,15);
+  
+  for ireg=1:size(mom,1)
+    ireg
+    lags = 1:800;
+    autoc = acf(mom(ireg,:)',800);
+    lambda(ireg)=tp_fitexpdecay(autoc,lags,0.01);
+    ii = find(autoc<.2,1,'first');
+    if isempty(ii)
+      acorr(ireg) = nan;
+    else
+      acorr(ireg) = lags(ii);
+    end    
+  end
+  
 end
 
 

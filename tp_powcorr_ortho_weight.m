@@ -184,8 +184,6 @@ for iep = 1 : nep
 %     
     end
     filt      = get_spatfilt(pars);
-%     filt      = filt(:,find(aalgrid.mask));
-%     pos       = pos(find(aalgrid.mask),:);
   end
   % ----------------------------------------
   % bandpass filter data before?
@@ -255,55 +253,53 @@ for iep = 1 : nep
     
     if para.scnd_filt
       
-      flp       = 0.02;           % lowpass frequency of filter
-      fhi       = 0.4;           % highpass
-      res       = 2;
-      delt      = 1/(fsample/res);            % sampling interval
-      k         = 2;                  % 2nd order butterworth filter
-      fnq       = 1/(2*delt);       % Nyquist frequency
-      Wn        = [flp/fnq fhi/fnq]; % butterworth bandpass non-dimensional frequency
-      [bf2,af2] = butter(k,Wn);   % construct the filter
+      % APPLY MOVING AVERAGE TO FILTER ENVELOPES 
+      % (see email from Mark Woolrich)
       
-      fprintf('Filter, resample, filter again ...\n')
-      
-      if res ~= 1
-        for il = 1 : size(mom,1)
-          rmom(il,:) = resample(abs(mom(il,:)),1,res);
-        end
+      overlap = 0.9;
+      mom = abs(mom);
+      clear mom2
+      winsize = 100;
+      t = 1:size(mom,2);
+      for vox= 1 : size(mom,1)
+        [tmp,t_avg] = osl_movavg(mom(vox,:),t,winsize,overlap,0);
+        mom2(vox,:) = tmp(~isnan(t_avg));
+      end
+      mom = mom2; clear mom2
+      for ireg = 1:size(mom,1)
+        mom(ireg,:) = hilbert(mom(ireg,:));
       end
       
-      mom = rmom; clear rmom
-      mom = hilbert(zscore(filtfilt(bf2,af2,mom)));
-      
-      if para.tau == inf
-        segleng  = size(mom,2);
-      else
-        segleng  = para.tau*(fsample/res);
-      end
-      
-      segshift = segleng / 2;
+      segleng  = fsample/400;
+      segshift = 1;
       epleng   = size(mom,2);
       nseg     = floor((epleng-segleng)/segshift+1);
-      
+    
     end
     
     fprintf('Computing orth. amp. correlations ...\n')
     
     % define the tau for orthogonalizing
     if nep == 1
-% 
-      for iseg = 1 : nseg
-        tmp_mom = double(mom(:,(iseg-1)*segshift+1:(iseg-1)*segshift+segleng));
-        % this one computes orthopowcorrs based on fieldtrip code
-        c(:,:,iseg) =  compute_orthopowcorr(tmp_mom);
+      if ~para.scnd_filt
+        for iseg = 1 : nseg
+          tmp_mom = double(mom(:,(iseg-1)*segshift+1:(iseg-1)*segshift+segleng));
+          % this one computes orthopowcorrs based on fieldtrip code
+          c(:,:,iseg) =  compute_orthopowcorr(tmp_mom);
+        end
+        c = nanmean(c,3); clear mom
+      else
+        c =  compute_orthopowcorr(mom);
       end
-      c = nanmean(c,3); clear mom
     else
       c(:,:,iep) =  compute_orthopowcorr(mom); clear mom
     end
   else
     
-    % DO STUFF HERE
+    % DO STUFF HERE WITH WAVELETS???
+    % Nothing implemented
+    % --------
+    
   end
 end
 

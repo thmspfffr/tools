@@ -31,7 +31,7 @@ elseif isfield(para,'detrend') && para.detrend == 1
   Y = detrend_pow;
   regre = X\Y;
   
-  regre(2)*log10(para.f(1:length(pow)))+regre(1)
+%   regre(2)*log10(para.f(1:length(pow)))+regre(1)
   
   
   pow = detrend(pow);

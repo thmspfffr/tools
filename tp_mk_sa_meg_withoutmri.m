@@ -176,10 +176,26 @@ if isfield(sa,'grid_vtpm_6mm')
   [ng,ndum]=size(gg);
   sa_out.grid_vtpm_6mm_indi=(gg-repmat(ryx,ng,1))*inv(Ayx);
 end
-if isfield(sa,'cortex_brainstorm')
+if isfield(sa,'grid_cortex_brainstorm')
   gg=sa.grid_cortex_brainstorm;
   [ng,ndum]=size(gg);
   sa_out.grid_cortex_brainstorm_indi=(gg-repmat(ryx,ng,1))*inv(Ayx);
+end
+if isfield(sa,'grid_genemaps')
+  gg=sa.grid_genemaps;
+  [ng,ndum]=size(gg);
+  sa_out.grid_genemaps_indi=(gg-repmat(ryx,ng,1))*inv(Ayx);
+end
+if isfield(sa,'grid_genemaps_aal')
+  gg=sa.grid_genemaps_aal;
+  [ng,ndum]=size(gg);
+  sa_out.grid_genemaps_aal_indi=(gg-repmat(ryx,ng,1))*inv(Ayx);
+end
+if isfield(sa,'grid_MM')
+ % MULTIMODAL PARCELLATION (MM): Glasser et al.
+  gg=sa.grid_MM;
+  [ng,ndum]=size(gg);
+  sa_out.grid_MM_indi=(gg-repmat(ryx,ng,1))*inv(Ayx);
 end
 
 [sa.grid_cortex_lowres] = select_chans(sa_out.grid_cortex3000,400);

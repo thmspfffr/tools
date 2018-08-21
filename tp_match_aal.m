@@ -3,6 +3,7 @@
 function [transdat, trans, names] = tp_match_aal(para,varargin)
 
 clear names trans reg
+addpath ~/pconn/matlab
 
 switch para.grid
   case 'cortex'
@@ -11,7 +12,7 @@ switch para.grid
     load aalmask_grid_coarse
   case 'medium'
     load aalmask_grid_medium
-    case 'xcoarse'
+ 	case 'xcoarse'
     load aalmask_grid_xcoarse
 end
 
@@ -68,6 +69,9 @@ if exist('varargin','var')
   end
 end
 
+if para.dim == 1
+  
+  transdat = transdat(:,1);
 
-
+end
 

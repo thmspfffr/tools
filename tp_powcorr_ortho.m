@@ -125,6 +125,10 @@ for iep = 1 : nep
       elseif  strcmp(para.grid,'cortex_lowres')
 %         filt      = pconn_beamformer(cs,sa.sa.L_coarse,para);
         filt      = pconn_beamformer(cs,sa.sa.L_coarse,para);
+      elseif strcmp(para.grid,'genemaps')
+        filt      = pconn_beamformer(cs,sa.sa.L_genemaps,para);
+      elseif strcmp(para.grid,'genemaps_aal')
+        filt      = pconn_beamformer(cs,sa.sa.L_genemaps_aal,para);
       end
       
     elseif strcmp(para.filt,'eloreta')
@@ -142,6 +146,7 @@ for iep = 1 : nep
         pars.grid = 'medium';
         load ~/pconn/matlab/aalmask_grid_medium
       end
+      % CHANGE THIS AND TURN IT INTO REAL FUNCTION
       filt      = get_spatfilt(pars);
       filt      = filt(:,find(aalgrid.mask));
     end

@@ -5,7 +5,7 @@ function [lambda, fval] = tp_fitexpdecay(x,t,starting_value)
 x = x(:);
 t = t(:);
 
-f = @(lambda) sum((x - exp(-lambda.*t)).^2);
+f = @(lambda) sum((x(:) - exp(-lambda.*t(:))).^2);
 
 [lambda,fval] = fminsearch(f,starting_value);
 

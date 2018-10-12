@@ -38,6 +38,7 @@ switch para.wavelet
   
   case 'hanning'
     
+    error('Does not work!')
     nn    = (1:segleng)'-segleng/2;
     mywin = hanning(segleng);
     s1 = cos(nn*f*2*pi/fsample).*mywin;
@@ -47,6 +48,7 @@ switch para.wavelet
     
   case 'ft'
     
+    error('Does not work!')
     para.fsample = fsample;
     para.freqoi = f;
     para.gwidth = 3;
@@ -185,11 +187,12 @@ for iep = 1 : nep
     end
     filt      = get_spatfilt(pars);
   end
-  % ----------------------------------------
-  % bandpass filter data before?
+  
+  % apply bandpass filter
   dloc1 =  filtfilt(bfilt,afilt,dloc1);
+  
   % --------------------------------------
-  % COMPUTE GAUSSIAN WEIGHTING (see Brookes et al., 2016)
+  % APPLY GAUSSIAN WEIGHTING (see Brookes et al., 2016)
   % --------------------------------------
   if strcmp(para.grid,'aal_4mm') || strcmp(para.grid,'aal_6mm')
     aal_mom = zeros(91,size(dloc1,1));
@@ -199,7 +202,6 @@ for iep = 1 : nep
   
   fprintf('Atlas distance weighting ...\n')
   for ireg = 1 : size(aal_mom,1)
-%     fprintf('Atlas distance weighting ... reg%d / %d ... \n',ireg,size(aal_mom,1))
     if ~isfield(sa.sa,'aal_label')
       aalgrid.mask = aalgrid.mask(find(aalgrid.mask));
       idx = find(aalgrid.mask==ireg);
@@ -238,24 +240,20 @@ for iep = 1 : nep
   end
   fprintf('AAL done ...\n')
   mom = aal_mom; clear aal_mom dloc1 filt tmp m758
+  % --- END GAUSSIAN WEIGHTING ---
   
-  save('~/pmod_dat2.mat','mom')
-  
-  % COMPUTE CORRELATIONS BASED ON BAND-PASS FILTERED SIGNAL
+  % ---------------------------------
+  % COMPUTE POWER CORRELATIONS
+  % ---------------------------------
   if strcmp(para.wavelet,'bp_filt')
     
-    % make sure hilbert transform is applied in the right position
     for ireg = 1:size(mom,1)
       mom(ireg,:) = hilbert(mom(ireg,:));
     end
-    
-    %     mom = (hilbert(zscore(filtfilt(bfilt,afilt,mom'))))';
-    
-    if para.scnd_filt
-      
+        
+    if para.scnd_filt    
       % APPLY MOVING AVERAGE TO FILTER ENVELOPES 
       % (see email from Mark Woolrich)
-      
       overlap = 0.9;
       mom = abs(mom);
       clear mom2
@@ -274,25 +272,30 @@ for iep = 1 : nep
       segshift = 1;
       epleng   = size(mom,2);
       nseg     = floor((epleng-segleng)/segshift+1);
-    
     end
     
     fprintf('Computing orth. amp. correlations ...\n')
     
-    % define the tau for orthogonalizing
     if nep == 1
       if ~para.scnd_filt
-        for iseg = 1 : nseg
-          tmp_mom = double(mom(:,(iseg-1)*segshift+1:(iseg-1)*segshift+segleng));
-          % this one computes orthopowcorrs based on fieldtrip code
-          c(:,:,iseg) =  compute_orthopowcorr(tmp_mom);
-        end
-        c = nanmean(c,3); clear mom
-      else
+%         for iseg = 1 : nseg
+%           iseg
+%           tmp_mom = double(mom(:,(iseg-1)*segshift+1:(iseg-1)*segshift+segleng));
+%           c(:,:,iseg) =  compute_orthopowcorr(tmp_mom);
+%         end
+%         c = nanmean(c,3); clear mom
+%       else
         c =  compute_orthopowcorr(mom);
       end
     else
-      c(:,:,iep) =  compute_orthopowcorr(mom); clear mom
+      error('There is no reason for doing this unless you wanna compute FCD')
+      for iep = 1 : nep
+          iep
+          % DEFINE STUFF HERE
+          error('Does not work')
+          tmp_mom = double(mom(:,(iep-1)*segshift+1:(iep-1)*segshift+segleng));
+          c(:,:,iep) =  compute_orthopowcorr(tmp_mom);
+        end
     end
   else
     
@@ -303,6 +306,8 @@ for iep = 1 : nep
   end
 end
 
+% This subfunction computes orthogonalized power correlation
+% Code is copied from fieldtrip's ft_connectivity_powcorr_ortho.m
 
 function c = compute_orthopowcorr(mom,varargin)
 

@@ -1,4 +1,4 @@
-function [variance] = tp_src_var(data,para,sa)
+function [c, coh] = tp_src_var(data,para,sa)
 
 % function computes orthogonalized amplitude envelope correlations and
 % phase coherence in source space (see hipp et al., 2012, nat. neurosci. for
@@ -61,9 +61,17 @@ switch para.wavelet
     
     para.fsample = fsample;
     
-    para.freqoi = [para.bpfreq(1) para.bpfreq(2)];
-    flp = para.bpfreq(1);           % lowpass frequency of filter
-    fhi = para.bpfreq(2);
+    if any(size(f)~=1)
+      para.freqoi = [f(1) f(2)];
+      flp = f(1);           % lowpass frequency of filter
+      fhi = f(2);
+    else
+      para.freqoi = [f-1 f+1];
+      flp = f-1;           % lowpass frequency of filter
+      fhi = f+1;
+    end
+    
+    % CHECK IF THIS MAKES SENSE (LP HP?)
     
     para.ord = 4;
     delt = 1/fsample;            % sampling interval
@@ -82,168 +90,150 @@ for iep = 1 : nep
   
   if nep == 1; clear data; end
   
-  % ----------------------------------------
-  % compute cross spectrum
-  % ----------------------------------------
-  cs_data1    = [zeros(5000,size(dloc1,2)); dloc1(1:end-800,:); zeros(5000,size(dloc1,2))];
-  cs_data2    = hilbert(zscore(filtfilt(bfilt,afilt,dloc1)));
-  cs_data2    = cs_data2(5001:end-5000,:);
-  
-  segleng  = fsample;
-  segshift = segleng / 2;
-  epleng   = size(cs_data2,1);
-  nseg     = floor((epleng-segleng)/segshift+1);
-  
-  cs = zeros(size(dloc1,2),size(dloc1,2));
-  
-  fprintf('Computing cross spectrum ...\n');
-  
-  for iseg = 1 : nseg
-    
-    cs_data3 = cs_data2((iseg-1)*segshift+1:(iseg-1)*segshift+segleng,:);
-    cs = cs+(cs_data3'*cs_data3/size(cs_data3,2))/nseg;
-    
-  end
-  clear cs_data3 cs_data2 cs_data1
-  % ----------------------------------------
-  
-  % ----------------------------------------
-  % COMPUTE SPATIAL FILTER
-  % ----------------------------------------
-  
-  if strcmp(para.filt,'jh_lcmv')
-    
-    para.iscs = 1;
-    if strcmp(para.grid,'cortex')
-      % note that this means cortex3000
-      load('~/Documents/MATLAB/aalmask_grid_cortex3000.mat')
-      filt      = pconn_beamformer(cs,sa.sa.L_coarse,para);
-      filt      = filt(:,find(aalgrid.mask));
-      pos       = sa.sa.grid_cortex3000_indi;
-    elseif  strcmp(para.grid,'aal')
-      filt      = pconn_beamformer(cs,sa.sa.L_aal,para);
-    elseif  strcmp(para.grid,'medium')
-      load ~/pconn/matlab/aalmask_grid_medium
-      filt      = pconn_beamformer(cs,sa.sa.L_medium,para);
-      filt      = filt(:,find(aalgrid.mask));
-      pos       = sa.sa.grid_medium_indi;
-    elseif strcmp(para.grid,'aal_6mm')
-      pos       = sa.sa.grid_aal6mm_indi;
-      filt      = pconn_beamformer(cs,sa.sa.L_aal_6mm,para);
-    elseif strcmp(para.grid,'aal_4mm')
-      pos       = sa.sa.grid_aal4mm_indi;
-      filt      = pconn_beamformer(cs,sa.sa.L_aal_4mm,para);
-    elseif strcmp(para.grid,'m758_4mm')
-      pos       = sa.sa.grid_m758_4mm_indi;
-      filt      = pconn_beamformer(cs,sa.sa.L_m758_4mm,para);
-      m758      = tp_m758_grid();
-      sa.sa.aal_label = m758.tissue_4mm(m758.tissue_4mm>0);
-    elseif strcmp(para.grid,'m758_6mm')
-      pos       = sa.sa.grid_m758_6mm_indi;
-      filt      = pconn_beamformer(cs,sa.sa.L_m758_6mm,para);
-      m758      = tp_m758_grid();
-      sa.sa.aal_label = m758.tissue_4mm(m758.tissue_4mm>0);
-    end
-    
-  elseif strcmp(para.filt,'eloreta')
-    
-    pars      = [];
-    pars.filt = 'eloreta';
-    pars.cs   = cs;
-    pars.foi  = f;
-    pars.sa   = sa.sa;
-    if isfield(sa.sa,'L_coarse')
-      pars.grid = 'cortex';
-      pos = sa.sa.grid_cortex3000_indi;
-      load('~/Documents/MATLAB/aalmask_grid_cortex3000.mat')
-    elseif  isfield(sa.sa,'L_aal')
-      pars.grid = 'aal';
-    elseif isfield(sa.sa,'L_medium')
-      pos = sa.sa.grid_medium_indi;
-      pars.grid = 'medium';
-      load ~/pconn/matlab/aalmask_grid_medium
-    elseif isfield(sa.sa,'L_aal_6mm')
-      pars.grid = 'L_aal_6mm';
-      pos = sa.sa.grid_aal6mm_indi;
-    end
-    filt      = get_spatfilt(pars);
-    filt      = filt(:,find(aalgrid.mask));
-    pos       = pos(find(aalgrid.mask),:);
-  end
-  % ----------------------------------------
-  % bandpass filter data before?
-  dloc1 =  filtfilt(bfilt,afilt,dloc1);
-  % --------------------------------------
-  % COMPUTE GAUSSIAN WEIGHTING (see Brookes et al., 2016)
-  % --------------------------------------
-  if strcmp(para.grid,'aal_4mm') || strcmp(para.grid,'aal_6mm')
-    aal_mom = zeros(91,size(dloc1,1));
-  elseif strcmp(para.grid,'m758_4mm') || strcmp(para.grid,'m758_6mm')
-    aal_mom = zeros(758,size(dloc1,1));
-  end
-  
-  fprintf('Atlas distance weighting ...\n')
-  for ireg = 1 : size(aal_mom,1)
-%     fprintf('Atlas distance weighting ... reg%d / %d ... \n',ireg,size(aal_mom,1))
-    if ~isfield(sa.sa,'aal_label')
-      aalgrid.mask = aalgrid.mask(find(aalgrid.mask));
-      idx = find(aalgrid.mask==ireg);
-    else
-      idx = find(sa.sa.aal_label==ireg);
-    end
-      
-    if length(idx)>1
-      com = mean(pos(idx,:));
-    else
-      com = pos(idx,:);
-    end
-
-    dist = sqrt((com(1)-pos(idx,1)).^2 + (com(2)-pos(idx,2)).^2 + (com(3)-pos(idx,3)).^2);
-    
-    % In cm or mm?
-    xx = pos; for i=1:3; xx(:,1)=xx(:,i)-mean(xx(:,i)); end
-    xrad = mean(sqrt(sum(xx.^2,2)));
-    
-    if xrad > 20
-      w    = exp((-dist.^2)./400);
-    else
-      w    = exp((-10*dist.^2)./400);
-    end
-    
-    tmp = filt(:,idx)'*dloc1';
-    % flip sign to account for arbitrary polarity
-    tmp = adjustsign(tmp').*tmp;
-    
-    if para.weigh == 1
-      aal_mom(ireg,:) = sum(w.*tmp)./length(idx);
-    elseif para.weigh == 2
-      aal_mom(ireg,:) = sum(tmp);
-    end
-    
-  end
-  fprintf('AAL done ...\n')
-  mom = aal_mom; clear aal_mom dloc1 sa filt tmp m758
-  
   % COMPUTE CORRELATIONS BASED ON BAND-PASS FILTERED SIGNAL
   if strcmp(para.wavelet,'bp_filt')
     
-    % make sure hilbert transform is applied in the right way
-    for ireg = 1:size(mom,1)
-      tmp_variance(ireg,:) = var(abs(hilbert(mom(ireg,:))).^2);
-    end
+    dloc1    = [zeros(5000,size(dloc1,2)); dloc1(1:end-800,:); zeros(5000,size(dloc1,2))];
+    dloc2    = hilbert(zscore(filtfilt(bfilt,afilt,dloc1))); 
+    dloc2    = dloc2(5001:end-5000,:);
     
-    for ireg = 1 : size(mom)
-      for jreg = 1 : size(mom)
+    segleng  = fsample;
+    segshift = segleng / 2;
+    epleng   = size(dloc2,1);
+    nseg     = floor((epleng-segleng)/segshift+1);
+ 
+    cs = zeros(size(dloc1,2),size(dloc1,2)); clear dloc1
+    
+    fprintf('Computing cross spectrum ...\n')
+    
+    for iseg = 1 : nseg
+      
+      dloc3 = dloc2((iseg-1)*segshift+1:(iseg-1)*segshift+segleng,:);
+      cs = cs+(dloc3'*dloc3/size(dloc3,2))/nseg;
+      
+    end
         
-        variance(ireg,jreg) =  (tmp_variance(ireg)+tmp_variance(jreg))./2;
-        
+    if strcmp(para.filt,'jh_lcmv')
+      para.iscs = 1;
+      if strcmp(para.grid,'coarse')
+        filt      = pconn_beamformer(cs,sa.sa.L_coarse,para);
+      elseif  strcmp(para.grid,'L_aal')
+        filt      = pconn_beamformer(cs,sa.sa.L_aal,para);
+      elseif  strcmp(para.grid,'L_xcoarse')
+        filt      = pconn_beamformer(cs,sa.sa.L_xcoarse,para);
+      elseif  strcmp(para.grid,'cortex_lowres')
+        filt      = pconn_beamformer(cs,sa.sa.L_coarse,para);
+      elseif  strcmp(para.grid,'cortex800')
+        filt      = pconn_beamformer(cs,sa.sa.L_coarse,para);
+      elseif strcmp(para.grid,'genemaps')
+        filt      = pconn_beamformer(cs,sa.sa.L_genemaps,para);
+      elseif strcmp(para.grid,'genemaps_aal')
+        filt      = pconn_beamformer(cs,sa.sa.L_genemaps_aal,para);
       end
+      
+    elseif strcmp(para.filt,'eloreta')
+      % Not supported at the moment
+      % ------------------
+%       pars      = [];
+%       pars.filt = 'eloreta';
+%       pars.cs   = cs;
+%       pars.foi  = f;
+%       pars.sa   = sa.sa;
+%       if isfield(sa.sa,'L_coarse')
+%         pars.grid = 'cortex';
+%         load('~/Documents/MATLAB/aalmask_grid_cortex3000.mat')
+%       elseif  isfield(sa.sa,'L_aal')
+%         pars.grid = 'aal';
+%       elseif  isfield(sa.sa,'L_medium')
+%         pars.grid = 'medium';
+%         load ~/pconn/matlab/aalmask_grid_medium
+%       end
+%       % CHANGE THIS AND TURN IT INTO REAL FUNCTION
+%       filt      = get_spatfilt(pars);
+%       filt      = filt(:,find(aalgrid.mask));
     end
-          
-
-  else
     
-    % DO STUFF HERE
+    mom = single(filt)'*single(dloc2)'; clear dloc2 sa
+    % get power estimates
+    mom = mom.^2;
+
+    if para.scnd_filt    
+      % APPLY MOVING AVERAGE TO FILTER ENVELOPES 
+      % (see email from Mark Woolrich)
+      overlap = 0.75;
+      mom = abs(mom);
+      clear mom2
+      winsize = 50;
+      t = 1:size(mom,2);
+      for vox= 1 : size(mom,1)
+        [tmp,t_avg] = osl_movavg(mom(vox,:),t,winsize,overlap,0);
+        mom2(vox,:) = tmp(~isnan(t_avg));
+      end
+      mom = mom2; clear mom2
+      for ireg = 1:size(mom,1)
+        mom(ireg,:) = hilbert(mom(ireg,:)).^2;
+      end
+      
+%       segleng  = fsample/400;
+%       segshift = 1;
+%       epleng   = size(mom,2);
+%       nseg     = floor((epleng-segleng)/segshift+1);
+    end
+    
+%     if para.tau == 0
+%       segshift = 1;
+%     else
+%       segleng = fsample*para.tau;
+%       segshift = segleng / 2;
+%     end
+%       
+    fprintf('Computing orth. amp. correlations ...\n')
+    
+%     if nep == 1
+      % computes orthopowcorrs based on fieldtrip code
+      c =  var(double(mom),[],2);
+%     else
+%       c(:,:,iep) =  compute_orthopowcorr(mom); clear mom
+%     end
+    
+  else
+    error('not supported - test first')
+    para.iscs = 0;
+    
+    for iseg = 1 : nseg
+      
+      fprintf('Seg %d/%d ...\n',iseg,nseg)
+      
+      dloc2 = dloc1((iseg-1)*segshift+1:(iseg-1)*segshift+segleng,:);
+      
+      dataf = sum(dloc2.*ss);
+      mom(:,iseg) = dataf;
+      
+    end
+    
+    para.iscs = 0;
+    filt = pconn_beamformer(mom,sa.sa.L_aal,para);
+    
+    mom = filt'*mom;
+    
+    % compute cross spectrum in source for coherence
+    cs = complex(zeros(91,91));
+    
+    for iseg = 1 : nseg
+      
+      dloc3 = mom(:,(iseg-1)*segshift+1:(iseg-1)*segshift+segleng);
+      dloc3 = dloc3';
+      cs = cs+(dloc3'*dloc3/size(dloc3,2))/nseg;
+      
+    end
+    
+    coh = cs./sqrt(diag(cs)*diag(cs)');
+    
+    % this one computes orthopowcorrs based on fieldtrip code
+    c(:,:,iep) =  var(double(mom),[],2); clear mom
     
   end
 end
+% compute power corr
+
+

@@ -203,6 +203,11 @@ gg=sa.grid_cortex_lowres;
 [ng,ndum]=size(gg);
 sa_out.grid_cortex_lowres_indi=(gg-repmat(ryx,ng,1))*inv(Ayx);
 
+[sa.grid_cortex800] = select_chans(sa_out.grid_cortex3000,800);
+gg=sa.grid_cortex800;
+[ng,ndum]=size(gg);
+sa_out.grid_cortex800_indi=(gg-repmat(ryx,ng,1))*inv(Ayx);
+
 
 
 return;

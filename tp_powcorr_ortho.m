@@ -94,7 +94,6 @@ for iep = 1 : nep
   if strcmp(para.wavelet,'bp_filt')
     
     dloc1    = [zeros(5000,size(dloc1,2)); dloc1(1:end-800,:); zeros(5000,size(dloc1,2))];
-%     dloc2    = hilbert(zscore(filtfilt(bfilt,afilt,detrend(dloc1-repmat(mean(dloc1),[length(dloc1) 1]))))); 
     dloc2    = hilbert(zscore(filtfilt(bfilt,afilt,dloc1))); 
     dloc2    = dloc2(5001:end-5000,:);
     
@@ -123,7 +122,8 @@ for iep = 1 : nep
       elseif  strcmp(para.grid,'L_xcoarse')
         filt      = pconn_beamformer(cs,sa.sa.L_xcoarse,para);
       elseif  strcmp(para.grid,'cortex_lowres')
-%         filt      = pconn_beamformer(cs,sa.sa.L_coarse,para);
+        filt      = pconn_beamformer(cs,sa.sa.L_coarse,para);
+      elseif  strcmp(para.grid,'cortex800')
         filt      = pconn_beamformer(cs,sa.sa.L_coarse,para);
       elseif strcmp(para.grid,'genemaps')
         filt      = pconn_beamformer(cs,sa.sa.L_genemaps,para);
@@ -132,90 +132,64 @@ for iep = 1 : nep
       end
       
     elseif strcmp(para.filt,'eloreta')
-      pars      = [];
-      pars.filt = 'eloreta';
-      pars.cs   = cs;
-      pars.foi  = f;
-      pars.sa   = sa.sa;
-      if isfield(sa.sa,'L_coarse')
-        pars.grid = 'cortex';
-        load('~/Documents/MATLAB/aalmask_grid_cortex3000.mat')
-      elseif  isfield(sa.sa,'L_aal')
-        pars.grid = 'aal';
-      elseif  isfield(sa.sa,'L_medium')
-        pars.grid = 'medium';
-        load ~/pconn/matlab/aalmask_grid_medium
-      end
-      % CHANGE THIS AND TURN IT INTO REAL FUNCTION
-      filt      = get_spatfilt(pars);
-      filt      = filt(:,find(aalgrid.mask));
+      % Not supported at the moment
+      % ------------------
+%       pars      = [];
+%       pars.filt = 'eloreta';
+%       pars.cs   = cs;
+%       pars.foi  = f;
+%       pars.sa   = sa.sa;
+%       if isfield(sa.sa,'L_coarse')
+%         pars.grid = 'cortex';
+%         load('~/Documents/MATLAB/aalmask_grid_cortex3000.mat')
+%       elseif  isfield(sa.sa,'L_aal')
+%         pars.grid = 'aal';
+%       elseif  isfield(sa.sa,'L_medium')
+%         pars.grid = 'medium';
+%         load ~/pconn/matlab/aalmask_grid_medium
+%       end
+%       % CHANGE THIS AND TURN IT INTO REAL FUNCTION
+%       filt      = get_spatfilt(pars);
+%       filt      = filt(:,find(aalgrid.mask));
     end
     
     mom = single(filt)'*single(dloc2)'; clear dloc2 sa
 
-%     if para.scnd_filt
-% 
-%       fhp   = 0.02;           % lowpass frequency of filter
-%       flp   = 0.4;           % highpass
-%       res       = 2;
-%       delt      = 1/(fsample/res);            % sampling interval
-%       k         = 2;                  % 2nd order butterworth filter
-%       fnq       = 1/(2*delt);       % Nyquist frequency
-%       Wn        = [fhp/fnq flp/fnq]; % butterworth bandpass non-dimensional frequency
-%       [bf2,af2] = butter(k,Wn);   % construct the filter
-%       
-%       fprintf('Filter, resample, filter again ...\n')
-% 
-%       if res ~= 1
-%         for il = 1 : size(mom,1)
-%           rmom(il,:) = resample(abs(mom(il,:)),1,res);
-%         end
-%       end
-%       
-%       mom = rmom; clear rmom
-%       
-%       mom    = hilbert(zscore(filtfilt(bf2,af2,mom)));
-%       
-%       if para.tau == inf
-%         segleng  = size(mom,2);
-%       else
-% %         segleng  = para.tau*(fsample/res);
-%       end
-%       
-%       segleng = fsample*para.tau;
-%       
-%       segshift = segleng / 2;
+    if para.scnd_filt    
+      % APPLY MOVING AVERAGE TO FILTER ENVELOPES 
+      % (see email from Mark Woolrich)
+      overlap = 0.75;
+      mom = abs(mom);
+      clear mom2
+      winsize = 50;
+      t = 1:size(mom,2);
+      for vox= 1 : size(mom,1)
+        [tmp,t_avg] = osl_movavg(mom(vox,:),t,winsize,overlap,0);
+        mom2(vox,:) = tmp(~isnan(t_avg));
+      end
+      mom = mom2; clear mom2
+      for ireg = 1:size(mom,1)
+        mom(ireg,:) = hilbert(mom(ireg,:));
+      end
+      
+%       segleng  = fsample/400;
+%       segshift = 1;
 %       epleng   = size(mom,2);
 %       nseg     = floor((epleng-segleng)/segshift+1);
-%       
-%     end
-    
-    if para.tau == 0
-      segshift = 1;
-    else
-      segleng = fsample*para.tau;
-      segshift = segleng / 2;
     end
-      
+    
+%     if para.tau == 0
+%       segshift = 1;
+%     else
+%       segleng = fsample*para.tau;
+%       segshift = segleng / 2;
+%     end
+%       
     fprintf('Computing orth. amp. correlations ...\n')
     
     if nep == 1
-%       fprintf('Computing first...\n')
-%       for i = 1 :size(mom,1)
-%         m(i,:) = resample(double(mom(i,:)),1,40);
-%       end
-%             mom = m; clear m
-
-%       idx = segshift:segshift:size(mom,2)-segshift;
       % computes orthopowcorrs based on fieldtrip code
       c =  compute_orthopowcorr(double(mom));
-%       fprintf('Computing second...\n')
-%       c(:,:,2) =  compute_orthopowcorr(m); clear m
-%       for i = 1 :
-%         m(i,:) = resample(double(mom(i,:)),1,400);
-%       end
-%       fprintf('Computing third...\n')
-%       c(:,:,3) =  compute_orthopowcorr(m);
     else
       c(:,:,iep) =  compute_orthopowcorr(mom); clear mom
     end

@@ -1,4 +1,4 @@
-function [hh,hii]=showmri_transp(mri,para,varargin);
+exitfunction [hh,hii]=showmri_transp(mri,para,varargin);
 % shows mri-slices eventually plus sources 
 % usage:  [hh,hii]=showmri(mri,para,source1,source2,...);
 % 
@@ -113,7 +113,7 @@ function [hh,hii]=showmri_transp(mri,para,varargin);
 % hhi indices of shown sources (sources may fall outside 
 %     the shown slices, are not shown and the handles would 
 %     get confused)
-% �
+% ???
 data=mri.data;
 scales=diag(mri.scales);
 nnn=size(data);

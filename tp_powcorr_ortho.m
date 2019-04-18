@@ -47,15 +47,15 @@ switch para.wavelet
     
   case 'ft'
     
-    para.fsample = fsample;
-    para.freqoi = f;
-    para.gwidth = 3;
-    para.width  = 7;
-    
-    w = tp_mkwavelet(para);
-    ss = repmat(w,1,nchan);
-    segleng = length(w);
-    segshift = floor(segleng/8);
+%     para.fsample = fsample;
+%     para.freqoi = f;
+%     para.gwidth = 3;
+%     para.width  = 7;
+%     
+%     w = tp_mkwavelet(para);
+%     ss = repmat(w,1,nchan);
+%     segleng = length(w);
+%     segshift = floor(segleng/8);
     
   case 'bp_filt'
     
@@ -210,22 +210,36 @@ for iep = 1 : nep
     end
     
     para.iscs = 0;
-    filt = pconn_beamformer(mom,sa.sa.L_aal,para);
+    if strcmp(para.grid,'coarse')
+      filt      = pconn_beamformer(mom,sa.sa.L_coarse,para);
+    elseif  strcmp(para.grid,'L_aal')
+      filt      = pconn_beamformer(mom,sa.sa.L_aal,para);
+    elseif  strcmp(para.grid,'L_xcoarse')
+      filt      = pconn_beamformer(mom,sa.sa.L_xcoarse,para);
+    elseif  strcmp(para.grid,'cortex_lowres')
+      filt      = pconn_beamformer(mom,sa.sa.L_coarse,para);
+    elseif  strcmp(para.grid,'cortex800')
+      filt      = pconn_beamformer(mom,sa.sa.L_coarse,para);
+    elseif strcmp(para.grid,'genemaps')
+      filt      = pconn_beamformer(mom,sa.sa.L_genemaps,para);
+    elseif strcmp(para.grid,'genemaps_aal')
+      filt      = pconn_beamformer(mom,sa.sa.L_genemaps_aal,para);
+    end
     
     mom = filt'*mom;
     
     % compute cross spectrum in source for coherence
-    cs = complex(zeros(91,91));
+%     cs = complex(zeros(91,91));
     
-    for iseg = 1 : nseg
-      
-      dloc3 = mom(:,(iseg-1)*segshift+1:(iseg-1)*segshift+segleng);
-      dloc3 = dloc3';
-      cs = cs+(dloc3'*dloc3/size(dloc3,2))/nseg;
-      
-    end
-    
-    coh = cs./sqrt(diag(cs)*diag(cs)');
+%     for iseg = 1 : nseg
+%       
+%       dloc3 = mom(:,(iseg-1)*segshift+1:(iseg-1)*segshift+segleng);
+%       dloc3 = dloc3';
+%       cs = cs+(dloc3'*dloc3/size(dloc3,2))/nseg;
+%       
+%     end
+%     
+%     coh = cs./sqrt(diag(cs)*diag(cs)');
     
     % this one computes orthopowcorrs based on fieldtrip code
     c(:,:,iep) =  compute_orthopowcorr(mom); clear mom

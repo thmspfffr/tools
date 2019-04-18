@@ -115,6 +115,12 @@ if cont_locs_2D==1;
   
 end
 
+
+if isfield(sa,'grid_BNA_5mm')
+  gg=sa.grid_BNA_5mm;
+  [ng,ndum]=size(gg);
+  sa_out.grid_BNA_5mm_indi=(gg-repmat(ryx,ng,1))*inv(Ayx);
+end
 if isfield(sa,'grid_xcoarse')
   gg=sa.grid_xcoarse;
   [ng,ndum]=size(gg);
@@ -156,16 +162,16 @@ if isfield(sa,'grid_aal4mm')
   [ng,ndum]=size(gg);
   sa_out.grid_aal6mm_indi=(gg-repmat(ryx,ng,1))*inv(Ayx);
 end
-if isfield(sa,'grid_m758_4mm')
-  gg=sa.grid_m758_4mm;
-  [ng,ndum]=size(gg);
-  sa_out.grid_m758_4mm_indi=(gg-repmat(ryx,ng,1))*inv(Ayx);
-end
-if isfield(sa,'grid_m758_6mm')
-  gg=sa.grid_m758_6mm;
-  [ng,ndum]=size(gg);
-  sa_out.grid_m758_6mm_indi=(gg-repmat(ryx,ng,1))*inv(Ayx);
-end
+% if isfield(sa,'grid_m758_4mm')
+%   gg=sa.grid_m758_4mm;
+%   [ng,ndum]=size(gg);
+%   sa_out.grid_m758_4mm_indi=(gg-repmat(ryx,ng,1))*inv(Ayx);
+% end
+% if isfield(sa,'grid_m758_6mm')
+%   gg=sa.grid_m758_6mm;
+%   [ng,ndum]=size(gg);
+%   sa_out.grid_m758_6mm_indi=(gg-repmat(ryx,ng,1))*inv(Ayx);
+% end
 if isfield(sa,'grid_vtpm_4mm')
   gg=sa.grid_vtpm_4mm;
   [ng,ndum]=size(gg);

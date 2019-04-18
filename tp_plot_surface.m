@@ -1,5 +1,9 @@
-function f = tp_plot_surface(par,sa_template,para)
+function f = tp_plot_surface(par,para)
 
+load /home/gnolte/meth/templates/sa_template.mat;
+addpath /home/gnolte/meg_toolbox/meg/
+addpath /home/gnolte/meg_toolbox/toolbox_nightly/
+addpath /home/gnolte/meg_toolbox/toolbox/
 
 vc    = sa_template.vc;
 g2    = sa_template.cortex10K.vc;
@@ -15,7 +19,7 @@ else
   dd = para.dd;
 end
 
-par = spatfiltergauss(par,g1,dd,g2);
+par = spatfiltergauss(par(:),g1,dd,g2);
 %%
 if isfield(para,'fn')
   fig = figure('visible','off'); set(gcf,'color','w');

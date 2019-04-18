@@ -1,4 +1,4 @@
-  
+
 function atlas = tp_create_grid(para)
 
 fprintf('Calculating atlas region mask...\n');
@@ -13,109 +13,117 @@ elseif strcmp(para,'vtpm')
 end
 
 if prod(size(atlas.anatomy)) == 7221032
-  stepsize = [4 6];
+  %   stepsize = [4 6];
+  stepsize = [2 3];
 else
   stepsize = [2 3];
 end
-  % get coordinates from voxel indices
-  ac=zeros(atlas.dim(1)*atlas.dim(2)*atlas.dim(3),3);
+% get coordinates from voxel indices
+ac=zeros(atlas.dim(1)*atlas.dim(2)*atlas.dim(3),3);
 
-  clear bc
-  
-  ii=0;
-  for ix=1:stepsize(1):atlas.dim(1)
-      for iy=1:stepsize(1):atlas.dim(2)
-          for iz=1:stepsize(1):atlas.dim(3)
-              ii=ii+1;
-              r=[ix,iy,iz,1]';
-              rc=atlas.transform*r;
-              bc(ii,:)=rc(1:3)'; 
-              atlas.tissue_4mm(ii) = atlas.anatomy(ix,iy,iz);
-          end
-      end
+clear bc
+
+% label correctly
+for i = 1 : 50
+  if i < 26; prefix = 'l_'; else prefix = 'r_'; end
+  atlas.tissuelabel{i} = [prefix atlas.tissuelabel{i}];
+end
+
+% ----------------------------------------
+% stepsize(1): 4 mm?
+% ----------------------------------------
+
+ii=0; bc = zeros(prod(floor(atlas.dim./stepsize(1))),3);
+for ix=1:stepsize(1):atlas.dim(1)
+  for iy=1:stepsize(1):atlas.dim(2)
+    for iz=1:stepsize(1):atlas.dim(3)
+      ii=ii+1;
+      r=[ix,iy,iz,1]';
+      rc=atlas.transform*r;
+      bc(ii,:)=rc(1:3)';
+      atlas.tissue_4mm(ii) = atlas.anatomy(ix,iy,iz);
+    end
   end
+end
 
-  atlas.grid_4mm = bc(atlas.tissue_4mm>0,:);
-  atlas.label_4mm = atlas.tissue_4mm(atlas.tissue_4mm>0);
-  clear bc
+atlas.grid_4mm = bc(atlas.tissue_4mm>0,:);
+atlas.label_4mm = atlas.tissue_4mm(atlas.tissue_4mm>0);
 
-  ii=0;
-  for ix=1:stepsize(2):atlas.dim(1)
-      for iy=1:stepsize(2):atlas.dim(2)
-          for iz=1:stepsize(2):atlas.dim(3)
-              ii=ii+1;
-              r=[ix,iy,iz,1]';
-              rc=atlas.transform*r;
-              bc(ii,:)=rc(1:3)'; 
-              atlas.tissue_6mm(ii) = atlas.anatomy(ix,iy,iz);
-          end
-      end
+% get left/right
+% ----------------------------------------
+for i = 1 : size(atlas.grid_4mm,1)
+  if atlas.grid_4mm(i,1)<0
+    add_const = 0;
+  else
+    add_const = 25;
   end
+  atlas.new_label_4mm(i) = atlas.label_4mm(i)+add_const;
+end
+atlas.label_4mm = atlas.new_label_4mm;
+atlas = rmfield(atlas,{'new_label_4mm'});
 
-  atlas.grid_6mm = bc(atlas.tissue_6mm>0,:);
-  atlas.label_6mm = atlas.tissue_6mm(atlas.tissue_6mm>0);
-  
-%% IMPLEMENT AAL GRID HERE
-% -----------------------------------
-  
-% 
-% aal = ft_read_atlas('~/Documents/MATLAB/fieldtrip-20160919/template/atlas/aal/ROI_MNI_V4.nii');
-% % get coordinates from voxel indices
-% ac=zeros(aal.dim(1)*aal.dim(2)*aal.dim(3),3);
-% 
-% ii=0;
-% for ix=1:aal.dim(1)
-%   for iy=1:aal.dim(2)
-%     for iz=1:aal.dim(3)
-%       ii=ii+1;
-%       r=[ix,iy,iz,1]';
-%       rc=aal.transform*r;
-%       ac(ii,:)=rc(1:3)';
-%       aal.tissue_2mm(ii) = aal.tissue(ix,iy,iz);
-%     end
-%   end
-% end
-% 
-% % subsample
-% ii=0;
-% for ix=1:3:aal.dim(1)
-%   for iy=1:3:aal.dim(2)
-%     for iz=1:3:aal.dim(3)
-%       ii=ii+1;
-%       r=[ix,iy,iz,1]';
-%       rc=aal.transform*r;
-%       bc(ii,:)=rc(1:3)';
-%       aal.tissue_6mm(ii) = aal.tissue(ix,iy,iz);
-%     end
-%   end
-% end
-% 
-% aal.grid_6mm = bc(aal.tissue_6mm>0&aal.tissue_6mm<=91,:);
-% 
-% clear bc
-% 
-% ii=0;
-% for ix=1:2:aal.dim(1)
-%   for iy=1:2:aal.dim(2)
-%     for iz=1:2:aal.dim(3)
-%       ii=ii+1;
-%       r=[ix,iy,iz,1]';
-%       rc=aal.transform*r;
-%       bc(ii,:)=rc(1:3)';
-%       aal.tissue_4mm(ii) = aal.tissue(ix,iy,iz);
-%     end
-%   end
-% end
-% 
-% aal.grid_4mm = bc(aal.tissue_4mm>0&aal.tissue_4mm<=91,:);
-% 
-% 
-% % compute center of mass of each AAL region
-% 
-% for i = 1 : size(aal.tissuelabel,2)
-%   
-%   aal.centroids(i,:) = mean(ac(aal.tissue==i,:));
-%   
-% end
+% delete empty stuff
+% ----------------------------------------
+l_idx = unique(atlas.label_4mm(atlas.label_4mm<26));
+r_idx = unique(atlas.label_4mm(atlas.label_4mm>25))-25;
+lr = intersect(l_idx,r_idx);
+not = setdiff([l_idx r_idx],lr);
+idx = [lr lr+25];
+atlas.tissuelabel_4mm = [atlas.tissuelabel(idx(1:length(idx)/2)) atlas.tissuelabel(idx(length(idx)/2+1:end))];
+
+not(2,:) = not+25;
+idx_delete = find(ismember(atlas.label_4mm,not(:)));
+atlas.label_4mm(idx_delete) = [];
+atlas.grid_4mm(idx_delete,:) = [];
+
+clear bc
+
+% ----------------------------------------
+% stepsize(2): 6 mm?
+% ----------------------------------------
+
+ii=0; bc = zeros(prod(floor(atlas.dim./stepsize(2))),3);
+for ix=1:stepsize(2):atlas.dim(1)
+  for iy=1:stepsize(2):atlas.dim(2)
+    for iz=1:stepsize(2):atlas.dim(3)
+      ii=ii+1;
+      r=[ix,iy,iz,1]';
+      rc=atlas.transform*r;
+      bc(ii,:)=rc(1:3)';
+      atlas.tissue_6mm(ii) = atlas.anatomy(ix,iy,iz);
+    end
+  end
+end
+
+atlas.grid_6mm = bc(atlas.tissue_6mm>0,:);
+atlas.label_6mm = atlas.tissue_6mm(atlas.tissue_6mm>0);
+
+% get left/right
+% ----------------------------------------
+for i = 1 : size(atlas.grid_6mm,1)
+  if atlas.grid_6mm(i,1)<0
+    add_const = 0;
+  else
+    add_const = 25;
+  end
+  atlas.new_label_6mm(i) = atlas.label_6mm(i)+add_const;
+end
+atlas.label_6mm = atlas.new_label_6mm;
+atlas = rmfield(atlas,{'new_label_6mm'});
+
+% delete empty stuff
+% ----------------------------------------
+l_idx = unique(atlas.label_6mm(atlas.label_6mm<26));
+r_idx = unique(atlas.label_6mm(atlas.label_6mm>25))-25;
+lr = intersect(l_idx,r_idx);
+not = setdiff([l_idx r_idx],lr);
+idx = [lr lr+25];
+atlas.tissuelabel_6mm = [atlas.tissuelabel(idx(1:length(idx)/2)) atlas.tissuelabel(idx(length(idx)/2+1:end))];
+
+not(2,:) = not+25;
+idx_delete = find(ismember(atlas.label_6mm,not(:)));
+atlas.label_6mm(idx_delete) = [];
+atlas.grid_6mm(idx_delete,:) = [];
 
 
+clear bc

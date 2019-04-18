@@ -149,6 +149,10 @@ for iep = 1 : nep
       filt      = pconn_beamformer(cs,sa.sa.L_m758_6mm,para);
       m758      = tp_m758_grid();
       sa.sa.aal_label = m758.tissue_4mm(m758.tissue_4mm>0);
+    elseif strcmp(para.grid,'vtpm_4mm')
+       pars.grid = 'L_vtpm_4mm';
+       filt      = pconn_beamformer(cs,sa.sa.L_vtpm_4mm,para);
+       pos = sa.sa.grid_vtpm_4mm_indi;
     end
     
   elseif strcmp(para.filt,'eloreta')
@@ -174,6 +178,7 @@ for iep = 1 : nep
     elseif strcmp(sa.sa.leadfield, 'aal_4mm')
       pars.grid = 'L_aal_4mm';
       pos = sa.sa.grid_aal4mm_indi;
+    
 %     elseif strcmp(para.grid,'m758_4mm')
 %       pos	= sa.sa.grid_m758_4mm_indi;
 %       m758  = tp_m758_grid();
@@ -198,6 +203,11 @@ for iep = 1 : nep
     aal_mom = zeros(91,size(dloc1,1));
   elseif strcmp(para.grid,'m758_4mm') || strcmp(para.grid,'m758_6mm')
     aal_mom = zeros(758,size(dloc1,1));
+  elseif strcmp(para.grid,'vtpm_4mm') 
+    aal_mom = zeros(920,size(dloc1,1));
+    tmp = tp_create_grid('vtpm');
+    aalgrid.mask = tmp.label_4mm;
+
   end
   
   fprintf('Atlas distance weighting ...\n')
@@ -250,10 +260,11 @@ for iep = 1 : nep
     for ireg = 1:size(mom,1)
       mom(ireg,:) = hilbert(mom(ireg,:));
     end
-        
+    
+    % APPLY MOVING AVERAGE TO FILTER ENVELOPES
+    % (not necessary)
+    % --------------------------
     if para.scnd_filt    
-      % APPLY MOVING AVERAGE TO FILTER ENVELOPES 
-      % (see email from Mark Woolrich)
       overlap = 0.9;
       mom = abs(mom);
       clear mom2
@@ -273,26 +284,20 @@ for iep = 1 : nep
       epleng   = size(mom,2);
       nseg     = floor((epleng-segleng)/segshift+1);
     end
+    % END MOVING AVERAGE ----------
     
     fprintf('Computing orth. amp. correlations ...\n')
     
     if nep == 1
       if ~para.scnd_filt
-%         for iseg = 1 : nseg
-%           iseg
-%           tmp_mom = double(mom(:,(iseg-1)*segshift+1:(iseg-1)*segshift+segleng));
-%           c(:,:,iseg) =  compute_orthopowcorr(tmp_mom);
-%         end
-%         c = nanmean(c,3); clear mom
-%       else
         c =  compute_orthopowcorr(mom);
       end
     else
+      % not implemented (future: prepare FCD here)
       error('There is no reason for doing this unless you wanna compute FCD')
       for iep = 1 : nep
           iep
           % DEFINE STUFF HERE
-          error('Does not work')
           tmp_mom = double(mom(:,(iep-1)*segshift+1:(iep-1)*segshift+segleng));
           c(:,:,iep) =  compute_orthopowcorr(tmp_mom);
         end
@@ -308,7 +313,6 @@ end
 
 % This subfunction computes orthogonalized power correlation
 % Code is copied from fieldtrip's ft_connectivity_powcorr_ortho.m
-
 function c = compute_orthopowcorr(mom,varargin)
 
 refindx = 'all'; clear tapvec

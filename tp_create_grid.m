@@ -67,14 +67,23 @@ atlas = rmfield(atlas,{'new_label_4mm'});
 l_idx = unique(atlas.label_4mm(atlas.label_4mm<26));
 r_idx = unique(atlas.label_4mm(atlas.label_4mm>25))-25;
 lr = intersect(l_idx,r_idx);
-not = setdiff([l_idx r_idx],lr);
 idx = [lr lr+25];
-atlas.tissuelabel_4mm = [atlas.tissuelabel(idx(1:length(idx)/2)) atlas.tissuelabel(idx(length(idx)/2+1:end))];
+% atlas.tissuelabel_4mm = [atlas.tissuelabel(idx(1:length(idx)/2)) atlas.tissuelabel(idx(length(idx)/2+1:end))];
+atlas.tissuelabel_4mm = atlas.tissuelabel(idx);
 
-not(2,:) = not+25;
-idx_delete = find(ismember(atlas.label_4mm,not(:)));
-atlas.label_4mm(idx_delete) = [];
-atlas.grid_4mm(idx_delete,:) = [];
+for i = 1 : 50
+  old_idx{i} = find(atlas.label_4mm==i);
+end
+
+lab = zeros(1,size(atlas.label_4mm,2));
+
+for i = 1 : length(idx)
+  lab(old_idx{idx(i)})=i;
+end
+
+atlas.label_4mm = lab; 
+  
+% figure; set(gcf,'color','w')
 
 clear bc
 
@@ -118,12 +127,18 @@ r_idx = unique(atlas.label_6mm(atlas.label_6mm>25))-25;
 lr = intersect(l_idx,r_idx);
 not = setdiff([l_idx r_idx],lr);
 idx = [lr lr+25];
-atlas.tissuelabel_6mm = [atlas.tissuelabel(idx(1:length(idx)/2)) atlas.tissuelabel(idx(length(idx)/2+1:end))];
 
-not(2,:) = not+25;
-idx_delete = find(ismember(atlas.label_6mm,not(:)));
-atlas.label_6mm(idx_delete) = [];
-atlas.grid_6mm(idx_delete,:) = [];
+atlas.tissuelabel_6mm = atlas.tissuelabel(idx);
 
+for i = 1 : 50
+  old_idx{i} = find(atlas.label_6mm==i);
+end
 
+lab = zeros(1,size(atlas.label_6mm,2));
+
+for i = 1 : length(idx)
+  lab(old_idx{idx(i)})=i;
+end
+
+atlas.label_6mm = lab; 
 clear bc

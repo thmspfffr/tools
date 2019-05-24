@@ -25,7 +25,7 @@ function [resout]=tp_data2orthopowcorr(data,segleng,segshift,epleng,f,fsample,fi
 % output
 % resout: M1xM2 matrix of power correlations after orthogonalization.
 
-scale=sqrt(mean(mean(data.^2)));
+scale=sqrt(nanmean(nanmean(data.^2)));
 data=data/scale;
 nn=(1:segleng)'-segleng/2;
 
@@ -54,13 +54,29 @@ res5=zeros(ns1,ns1);
 kk=0;
 
 %datarawf=[];
-for i=1:nep;
-  i=i
+for i=1:nep
+%   i=i
   dloc=data((i-1)*epleng+1:i*epleng,:);
-  for j=1:nseg
+  
+  % idenfity segments containing NaNs and exclude from analysis
+  % ---------------------------
+  for i=1:nseg
+    tmp=dloc((i-1)*segshift+1:(i-1)*segshift+segleng,1);
+    nanidx(i) = any(isnan(tmp));
+  end
+  idx = find(~nanidx);
+  % ---------------------------
+  
+  for j=1:length(idx)
     j
     kk=kk+1;
-    dloc2=dloc((j-1)*segshift+1:(j-1)*segshift+segleng,:);
+    dloc2=dloc((idx(j)-1)*segshift+1:(idx(j)-1)*segshift+segleng,:);
+    
+    if any(isnan(dloc2(:,1)))
+      warning('NaN detected')     
+      continue
+    end
+    
     dataf=sum(dloc2.*ss);
     datasf1=dataf*filt;
     %datarawf=[datarawf;datasf1]

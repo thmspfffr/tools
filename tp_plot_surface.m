@@ -60,6 +60,11 @@ for i = [1 2 3 4]%size(positions,1)
   view(views(i,1),views(i,2)); daspect([1 1 1])
   h=light; material([0.4 0.6 0.2]); lighting GOURAUD
   set(h,'Position',positions(i,:));
+  if isfield(para,'marker')
+    hold on
+    if mean(para.marker)>10; para.marker = para.marker./10; end
+    plot3(para.marker(1),para.marker(2),10,'o')
+  end
   %
   if i == 1
     set(aa,'XLim',[spat_range(1,1) spat_range(2,1)])

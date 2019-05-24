@@ -152,33 +152,33 @@ for iep = 1 : nep
     elseif strcmp(para.grid,'vtpm_4mm')
        pars.grid = 'L_vtpm_4mm';
        filt      = pconn_beamformer(cs,sa.sa.L_vtpm_4mm,para);
-       pos = sa.sa.grid_vtpm_4mm_indi;
+       pos       = sa.sa.grid_vtpm_4mm_indi;
     end
     
   elseif strcmp(para.filt,'eloreta')
     
-    pars      = [];
-    pars.filt = 'eloreta';
-    pars.cs   = cs;
-    pars.foi  = f;
-    pars.sa   = sa.sa;
-    if isfield(sa.sa,'L_coarse')
-      pars.grid = 'cortex';
-      pos = sa.sa.grid_cortex3000_indi;
-      load('~/Documents/MATLAB/aalmask_grid_cortex3000.mat')
-    elseif  isfield(sa.sa,'L_aal')
-      pars.grid = 'aal';
-    elseif strcmp(sa.sa.leadfield, 'L_medium')
-      pos = sa.sa.grid_medium_indi;
-      pars.grid = 'medium';
-      load ~/pconn/matlab/aalmask_grid_medium
-    elseif strcmp(sa.sa.leadfield, 'aal_6mm')
-      pars.grid = 'L_aal_6mm';
-      pos = sa.sa.grid_aal6mm_indi;
-    elseif strcmp(sa.sa.leadfield, 'aal_4mm')
-      pars.grid = 'L_aal_4mm';
-      pos = sa.sa.grid_aal4mm_indi;
-    
+%     pars      = [];
+%     pars.filt = 'eloreta';
+%     pars.cs   = cs;
+%     pars.foi  = f;
+%     pars.sa   = sa.sa;
+%     if isfield(sa.sa,'L_coarse')
+%       pars.grid = 'cortex';
+%       pos = sa.sa.grid_cortex3000_indi;
+%       load('~/Documents/MATLAB/aalmask_grid_cortex3000.mat')
+%     elseif  isfield(sa.sa,'L_aal')
+%       pars.grid = 'aal';
+%     elseif strcmp(sa.sa.leadfield, 'L_medium')
+%       pos = sa.sa.grid_medium_indi;
+%       pars.grid = 'medium';
+%       load ~/pconn/matlab/aalmask_grid_medium
+%     elseif strcmp(sa.sa.leadfield, 'aal_6mm')
+%       pars.grid = 'L_aal_6mm';
+%       pos = sa.sa.grid_aal6mm_indi;
+%     elseif strcmp(sa.sa.leadfield, 'aal_4mm')
+%       pars.grid = 'L_aal_4mm';
+%       pos = sa.sa.grid_aal4mm_indi;
+%     
 %     elseif strcmp(para.grid,'m758_4mm')
 %       pos	= sa.sa.grid_m758_4mm_indi;
 %       m758  = tp_m758_grid();
@@ -189,8 +189,8 @@ for iep = 1 : nep
 % %       m758      = tp_m758_grid();
 %       sa.sa.aal_label = m758.tissue_4mm(m758.tissue_4mm>0);
 %     
-    end
-    filt      = get_spatfilt(pars);
+%     end
+%     filt      = get_spatfilt(pars);
   end
   
   % apply bandpass filter
@@ -201,19 +201,20 @@ for iep = 1 : nep
   % --------------------------------------
   if strcmp(para.grid,'aal_4mm') || strcmp(para.grid,'aal_6mm')
     aal_mom = zeros(91,size(dloc1,1));
+    reg_idx = unique(aalgrid.mask); reg_idx = reg_idx(1:91)+1;
   elseif strcmp(para.grid,'m758_4mm') || strcmp(para.grid,'m758_6mm')
     aal_mom = zeros(758,size(dloc1,1));
   elseif strcmp(para.grid,'vtpm_4mm') 
-    aal_mom = zeros(920,size(dloc1,1));
     tmp = tp_create_grid('vtpm');
+    aal_mom = zeros(size(tmp.tissuelabel_4mm,2),size(dloc1,1));
     aalgrid.mask = tmp.label_4mm;
-
+    reg_idx = unique(aalgrid.mask(aalgrid.mask>0));
   end
   
   fprintf('Atlas distance weighting ...\n')
-  for ireg = 1 : size(aal_mom,1)
+  for ireg = reg_idx
     if ~isfield(sa.sa,'aal_label')
-      aalgrid.mask = aalgrid.mask(find(aalgrid.mask));
+%       aalgrid.mask = aalgrid.mask(find(aalgrid.mask));
       idx = find(aalgrid.mask==ireg);
     else
       idx = find(sa.sa.aal_label==ireg);
@@ -249,7 +250,7 @@ for iep = 1 : nep
     
   end
   fprintf('AAL done ...\n')
-  mom = aal_mom; clear aal_mom dloc1 filt tmp m758
+  mom = aal_mom(reg_idx,:); clear aal_mom dloc1 filt tmp m758
   % --- END GAUSSIAN WEIGHTING ---
   
   % ---------------------------------
@@ -264,26 +265,26 @@ for iep = 1 : nep
     % APPLY MOVING AVERAGE TO FILTER ENVELOPES
     % (not necessary)
     % --------------------------
-    if para.scnd_filt    
-      overlap = 0.9;
-      mom = abs(mom);
-      clear mom2
-      winsize = 100;
-      t = 1:size(mom,2);
-      for vox= 1 : size(mom,1)
-        [tmp,t_avg] = osl_movavg(mom(vox,:),t,winsize,overlap,0);
-        mom2(vox,:) = tmp(~isnan(t_avg));
-      end
-      mom = mom2; clear mom2
-      for ireg = 1:size(mom,1)
-        mom(ireg,:) = hilbert(mom(ireg,:));
-      end
-      
-      segleng  = fsample/400;
-      segshift = 1;
-      epleng   = size(mom,2);
-      nseg     = floor((epleng-segleng)/segshift+1);
-    end
+%     if para.scnd_filt    
+%       overlap = 0.9;
+%       mom = abs(mom);
+%       clear mom2
+%       winsize = 100;
+%       t = 1:size(mom,2);
+%       for vox= 1 : size(mom,1)
+%         [tmp,t_avg] = osl_movavg(mom(vox,:),t,winsize,overlap,0);
+%         mom2(vox,:) = tmp(~isnan(t_avg));
+%       end
+%       mom = mom2; clear mom2
+%       for ireg = 1:size(mom,1)
+%         mom(ireg,:) = hilbert(mom(ireg,:));
+%       end
+%       
+%       segleng  = fsample/400;
+%       segshift = 1;
+%       epleng   = size(mom,2);
+%       nseg     = floor((epleng-segleng)/segshift+1);
+%     end
     % END MOVING AVERAGE ----------
     
     fprintf('Computing orth. amp. correlations ...\n')
@@ -368,5 +369,4 @@ for k = 1:numel(refindx)
   c(:,k) = (c1+c2)./2;
   %c(:,k+numel(refindx)) = c2;
 end
-
 

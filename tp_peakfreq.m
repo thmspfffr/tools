@@ -1,4 +1,4 @@
-function peak = tp_peakfreq(pow,para)
+function [peak, fun] = tp_peakfreq(pow,para)
 % tp_peakfreq.m
 % Computes peak frequency based on different methods
 % ----- para.method -----
@@ -33,7 +33,6 @@ elseif isfield(para,'detrend') && para.detrend == 1
   
 %   regre(2)*log10(para.f(1:length(pow)))+regre(1)
   
-  
   pow = detrend(pow);
 end
 
@@ -41,21 +40,23 @@ switch para.method
   
   case 'com'    
     peak = para.f(para.f_select)*pow(para.f_select) / sum(pow(para.f_select));
-  
+    fun = pow(para.f_select);
   case 'peak'
     [~,i] = max(pow(para.f_select));
     peak = para.f(para.f_select(i));
-  
+    fun = pow(para.f_select);
   case 'peakcom'    
     [~,i] = max(pow(para.f_select));
     i = para.f_select(1)+i-1;
     peak = para.f(i-para.win:i+para.win)*pow(i-para.win:i+para.win) / sum(pow(i-para.win:i+para.win)); 
-  
+    fun = pow(para.f_select);
   case 'gaussian'    
+    
     a=fit(para.f(para.f_select)',pow(para.f_select),'gauss1');
     fun = a.a1*exp(-((para.f(para.f_select)-a.b1)/a.c1).^2);
     [~,i] = max(fun);
-    peak = para.f(para.f_select(i));
+    ff = para.f(para.f_select);
+    peak = ff(i);
 
 end
 

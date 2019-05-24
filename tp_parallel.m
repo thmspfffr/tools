@@ -1,5 +1,6 @@
 function y = tp_parallel(fn,outdir,start,override)
 % Takes input:
+% tp_parallel(fc,outdir,start,override)
 % fn: filename (without ending)
 % outdir: out directory
 % start: 1 or 0

@@ -120,12 +120,12 @@ elseif strcmp(para.transfer,'to_bcn')
     dat(:,isnan(trans(:,2)),:) = [];
     trans(isnan(trans(:,2)),:) = [];
     
-  for i = 1 : size(trans)
+    for i = 1 : size(trans,1)
       translab{i} = aal.tissuelabel{trans(i,2)};
-      for j = 1 : size(trans)
+      for j = 1 : size(trans,1)
         
         transdat(i,j,:) = dat(trans(i,2),trans(j,2),:);
-
+        
       end
     end
   

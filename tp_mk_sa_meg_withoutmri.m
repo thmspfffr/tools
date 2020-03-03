@@ -48,6 +48,7 @@ elseif  isfield(shape.fid,'pos')
 else
   error('no fiducials found in shape.fid')
 end
+
 x1m=mean(x1);
 y1m=mean(y1);
 x2=x1-repmat(x1m,3,1);
@@ -59,7 +60,6 @@ scal=(s(1,1)+s(2,2))/2;
 s(3,3)=scal;
 Ayx=u*s*v';
 ryx=x1m-y1m*Ayx;
-
 
 sa_out.trafo.u_indi2template=Ayx;
 sa_out.trafo.r_indi2template=ryx;
@@ -117,7 +117,7 @@ end
 
 
 if isfield(sa,'grid_BNA_5mm')
-  gg=sa.grid_BNA_5mm;
+  gg=sa.grid_BNA_5mm./10;
   [ng,ndum]=size(gg);
   sa_out.grid_BNA_5mm_indi=(gg-repmat(ryx,ng,1))*inv(Ayx);
 end
@@ -153,12 +153,13 @@ if isfield(sa,'grid_cortex3000')
   sa_out.grid_cortex3000_indi=(gg-repmat(ryx,ng,1))*inv(Ayx);
 end
 if isfield(sa,'grid_aal4mm')
-  gg=sa.grid_aal4mm;
+  gg=sa.grid_aal4mm./10;
   [ng,ndum]=size(gg);
   sa_out.grid_aal4mm_indi=(gg-repmat(ryx,ng,1))*inv(Ayx);
 end
-if isfield(sa,'grid_aal4mm')
-  gg=sa.grid_aal6mm;
+if isfield(sa,'grid_aal6mm')
+  
+  gg=sa.grid_aal6mm./10;
   [ng,ndum]=size(gg);
   sa_out.grid_aal6mm_indi=(gg-repmat(ryx,ng,1))*inv(Ayx);
 end
@@ -208,11 +209,11 @@ end
 gg=sa.grid_cortex_lowres;
 [ng,ndum]=size(gg);
 sa_out.grid_cortex_lowres_indi=(gg-repmat(ryx,ng,1))*inv(Ayx);
-
-[sa.grid_cortex800] = select_chans(sa_out.grid_cortex3000,800);
-gg=sa.grid_cortex800;
-[ng,ndum]=size(gg);
-sa_out.grid_cortex800_indi=(gg-repmat(ryx,ng,1))*inv(Ayx);
+% 
+% [sa.grid_cortex800] = select_chans(sa_out.grid_cortex3000,800);
+% gg=sa.grid_cortex800;
+% [ng,ndum]=size(gg);
+% sa_out.grid_cortex800_indi=(gg-repmat(ryx,ng,1))*inv(Ayx);
 
 
 

@@ -1,4 +1,4 @@
-function [filt pow NAI] = pconn_beamformer(dat,lf,para)
+function [filt, pow] = tp_beamformer(Cf_real,lf,para)
 
 % Compute a joint filter for all conditions
 
@@ -7,18 +7,10 @@ function [filt pow NAI] = pconn_beamformer(dat,lf,para)
 % lf:     leadfield
 % reg:    regularization parameter (default is set below)
 
-if para.iscs
-  Cf_real = real(dat);
-else
- % dat is complex freq-specific data [chan x samples]
-  Cf_real = real(dat*dat'/size(dat,2));
-end
 % regularization parameter
 lambda = sum(diag(Cf_real))*para.reg; 
 
 invCf_real = pinv(Cf_real + lambda * eye(size(Cf_real)));
-
-clear filt
 
 n_voxel = size(lf,2);
 
@@ -36,8 +28,7 @@ for ilf=1:n_voxel
   pow(ilf)=s(1,1);
   % projection to principal direction
   filt(ilf,:) = u(:,1)'*filter; 
-%   NAI(ilf) = trace((squeeze(lf(:,ilf,:))'*invCf_real* squeeze(lf(:,ilf,:))).^(-1)) / trace(squeeze(lf(:,ilf,:))'*para.noisecov*squeeze(lf(:,ilf,:)));
-
+  
 end
 
 filt = filt';

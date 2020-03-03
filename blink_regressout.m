@@ -68,7 +68,7 @@ newsaccsmp  = round(saccsmp * (newFs/fsample));
 
 % dont continue if the subject didnt blink
 if isempty(newblinksmp),
-    newpupil = dat.bpfilt;
+    newpupil = dat.bpfilt+dat.lowfreqresid;
     return;
 end
 

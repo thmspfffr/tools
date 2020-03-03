@@ -1,4 +1,4 @@
-function csd = tp_wavelet_crossspec(data,freqoi)
+function csd = tp_wavelet_crossspec(data,freqoi,width)
 
 data.dat = data.trial;
 data.avg = data.dat; data.trial = [];
@@ -17,7 +17,7 @@ srate    = 400;
   cfg.output  = 'fourier';
   cfg.channel = {'MEG'};
   cfg.foi     = freqoi;
-  cfg.width   = 5.83; % again, as per Hipp et al. (2012) Nat Neurosci
+  cfg.width   = width; % again, as per Hipp et al. (2012) Nat Neurosci
   tempSD      = 1./(2*pi*(cfg.foi./cfg.width)); % temporal SD in sec
   tempWd      = round(3*tempSD*srate)/srate; % set to 3 std dev, comp with 1000 Hz sampl rate
   cfg.toi     = tempWd.*(1:floor(data.time(end)./tempWd));

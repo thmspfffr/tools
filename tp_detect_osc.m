@@ -1,12 +1,6 @@
 function osc = tp_detect_osc(x)
 % Detects oscillations in simulated time series. See
 % pmod_wc_wholebrain_detosc.m for details of the simulation.
-% An oscillation is defined to be present, when there is no time window
-% (with length = 200 samples)
-
-
-% siz = size(x(size(x,1)/2:end));
-% sig = zscore(x(size(x,1)/2:end));
 
 sig = single(zscore(x));
 siz = size(x,1);
@@ -34,6 +28,17 @@ else
     osc = 1;
   end
 end
+% end
+
+% if any(dif==0)
+%   osc = 0;
+% else
+%   if (sum(diff(dif)<0)/length(diff(dif)))>0.9
+%     osc = 0;
+%   else
+%     osc = 1;
+%   end
+% end
 
 
 % clust = bwlabel(idx);

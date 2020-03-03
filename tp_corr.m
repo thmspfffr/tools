@@ -13,9 +13,9 @@ function [r,p] = tp_corr(x,y,dim)
 % The function should be called: tp_corr(x,y,3);
 % -----------
 
-if dim ~= 3
-  error('Not tested for non 3D arrays')
-end
+% if dim ~= 3
+%   error('Not tested for non 3D arrays')
+% end
   
 az = bsxfun(@minus, x, nanmean(x,dim));
 bz = bsxfun(@minus, y, nanmean(y,dim));
@@ -24,8 +24,8 @@ a2 = az .^ 2;
 b2 = bz .^ 2;
 ab = az .* bz;
 
-r = sum(ab,3) ./ sqrt(sum(a2,dim) .* sum(b2,dim));
-t = r.* sqrt ( (28-2 ) ./ 1 - r.^2);
+r = sum(ab,dim) ./ sqrt(sum(a2,dim) .* sum(b2,dim));
+t = r.* sqrt ( (size(x,dim)-2 ) ./ 1 - r.^2);
 
-p=2*tcdf(-abs(t),27);
+p=2*tcdf(-abs(t),size(x,dim)-1);
   

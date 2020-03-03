@@ -25,7 +25,7 @@ if start == 1
   end
 elseif start == 0
   % end
-  if exist(sprintf([outdir '%s_processing.txt'],fn)) || exist(sprintf([outdir '%s.mat'],fn))
+  if exist(sprintf([outdir '%s_processing.txt'],fn)) && exist(sprintf([outdir '%s.mat'],fn))
     delete(sprintf([outdir '%s_processing.txt'],fn))
   end
 end

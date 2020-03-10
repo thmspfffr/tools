@@ -1,5 +1,5 @@
 
-function resout=tp_data2orthopowcorr_wavelet(data,filt,para)
+function resout=tp_data2orthopowcorr_wavelet_ft(data,filt,para)
 % calculates power correlation after orthogonalization between two sets of brain
 % voxels. Usually, these two sets are either identical (then the rsult is
 % for all pairs) or one set consists of a single voxel which is taken as
@@ -19,6 +19,8 @@ function resout=tp_data2orthopowcorr_wavelet(data,filt,para)
 % output
 % resout: M1xM2 matrix of power correlations after orthogonalization.
 
+addpath ~/Documents/MATLAB/fieldtrip-20160919/; ft_defaults()
+
 scale=sqrt(nanmean(nanmean(data.^2)));
 data=data./scale;
 % ----------------------------------
@@ -31,7 +33,7 @@ res5=zeros(size(filt,2),size(filt,2),'single');
 % DEFINE WAVELETS
 % ----------------------------------
 octave = 0.5; % Frequency resolution
-[wavelet,f,opt]=tp_mkwavelet(para.freq,octave,para.fsample);
+[KERNEL,f,opt]=tp_mkwavelet(para.freq,octave,para.fsample);
 % ----------------------------------
 
 nseg=floor((size(data,2)-opt.n_win)/opt.n_shift+1);
@@ -49,43 +51,13 @@ for j=1:nseg
   end
   kk=kk+1;
   
-  dataf=dloc2'*wavelet;
-  datasf1=dataf'*filt;
-  
-  for i1=1:size(filt,2)
-    x1=datasf1(i1);
-    x2=imag(datasf1*conj(x1)./abs(x1));
-%     y1=abs(x1)^2;
-%     y2=abs(x2).^2;
-% log-transform power as in hipp 2012 (10-03-2020)
-    y1=log10(abs(x1)^2);
-    y2=log10(abs(x2).^2);
-    if kk==1
-      res1(i1,:)=y1*y2;
-      res2(i1,:)=y1;
-      res3(i1,:)=y2;
-      res4(i1,:)=y1^2;
-      res5(i1,:)=y2.^2;
-    else
-      res1(i1,:)=res1(i1,:)+y1*y2;
-      res2(i1,:)=res2(i1,:)+y1;
-      res3(i1,:)=res3(i1,:)+y2;
-      res4(i1,:)=res4(i1,:)+y1^2;
-      res5(i1,:)=res5(i1,:)+y2.^2;
-    end
-  end
+  dataf=dloc2'*KERNEL;
+  datasf1(:,kk)=dataf'*filt;
   
 end
-% -------------------------------------
-res1=res1/kk;
-res2=res2/kk;
-res3=res3/kk;
-res4=res4/kk;
-res5=res5/kk;
-% -------------------------------------
-% resout is asymetrical (see hipp 2012), resout needs to be averaged
-resout=(res1-res2.*res3)./(sqrt((res4-res2.^2).*(res5-res3.^2))+eps);
-resout=tanh((atanh(resout)./2 + atanh(resout)'./2));
+
+resout = ft_connectivity_powcorr_ortho(datasf1);
+
 % -------------------------------------
 % REDUCE IF SIZE OF GRID IS INDICATIVE OF AAL PARCELATION
 % (in this case, the number of vertices is >5000)

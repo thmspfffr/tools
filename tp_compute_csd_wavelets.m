@@ -9,11 +9,11 @@ if size(data,1)>size(data,2)
 end
 
 % DEFINE WAVELETS
-[KERNEL,~,opt]=tp_mkwavelet(para.freq,0.5,para.fsample);
+[wavelet,~,opt]=tp_mkwavelet(para.freq,0.5,para.fsample);
 
 nseg=floor((size(data,2)-opt.n_win)/opt.n_shift+1);
 
-kk =0;
+kk = 0;
 nan_count = 0;
 
 for j=1:nseg
@@ -30,7 +30,7 @@ for j=1:nseg
   
   kk=kk+1;
   
-  dataf_4csd(:,j)=dloc2*KERNEL;
+  dataf_4csd(:,j)=dloc2*wavelet;
   
 end
 

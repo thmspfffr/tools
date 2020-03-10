@@ -1,5 +1,5 @@
 
-function resout=tp_data2orthopowcorr_wavelet(data,filt,para)
+function resout=tp_data2orthopowcorr_wavelet_sens(data,para)
 % calculates power correlation after orthogonalization between two sets of brain
 % voxels. Usually, these two sets are either identical (then the rsult is
 % for all pairs) or one set consists of a single voxel which is taken as
@@ -22,16 +22,16 @@ function resout=tp_data2orthopowcorr_wavelet(data,filt,para)
 scale=sqrt(nanmean(nanmean(data.^2)));
 data=data./scale;
 % ----------------------------------
-res1=zeros(size(filt,2),size(filt,2),'single');
-res2=zeros(size(filt,2),size(filt,2),'single');
-res3=zeros(size(filt,2),size(filt,2),'single');
-res4=zeros(size(filt,2),size(filt,2),'single');
-res5=zeros(size(filt,2),size(filt,2),'single');
+res1=zeros(size(data,1),size(data,1),'single');
+res2=zeros(size(data,1),size(data,1),'single');
+res3=zeros(size(data,1),size(data,1),'single');
+res4=zeros(size(data,1),size(data,1),'single');
+res5=zeros(size(data,1),size(data,1),'single');
 % ----------------------------------
 % DEFINE WAVELETS
 % ----------------------------------
 octave = 0.5; % Frequency resolution
-[wavelet,f,opt]=tp_mkwavelet(para.freq,octave,para.fsample);
+[KERNEL,f,opt]=tp_mkwavelet(para.freq,octave,para.fsample);
 % ----------------------------------
 
 nseg=floor((size(data,2)-opt.n_win)/opt.n_shift+1);
@@ -49,17 +49,13 @@ for j=1:nseg
   end
   kk=kk+1;
   
-  dataf=dloc2'*wavelet;
-  datasf1=dataf'*filt;
+  dataf=(dloc2'*KERNEL)';
   
-  for i1=1:size(filt,2)
-    x1=datasf1(i1);
-    x2=imag(datasf1*conj(x1)./abs(x1));
-%     y1=abs(x1)^2;
-%     y2=abs(x2).^2;
-% log-transform power as in hipp 2012 (10-03-2020)
-    y1=log10(abs(x1)^2);
-    y2=log10(abs(x2).^2);
+  for i1=1:size(dloc2,2)
+    x1=dataf(i1);
+    x2=imag(dataf*conj(x1)./abs(x1));
+    y1=abs(x1)^2;
+    y2=abs(x2).^2;
     if kk==1
       res1(i1,:)=y1*y2;
       res2(i1,:)=y1;
@@ -85,33 +81,7 @@ res5=res5/kk;
 % -------------------------------------
 % resout is asymetrical (see hipp 2012), resout needs to be averaged
 resout=(res1-res2.*res3)./(sqrt((res4-res2.^2).*(res5-res3.^2))+eps);
-resout=tanh((atanh(resout)./2 + atanh(resout)'./2));
+resout=tanh(atanh(resout)./2+atanh(resout)'./2);
 % -------------------------------------
-% REDUCE IF SIZE OF GRID IS INDICATIVE OF AAL PARCELATION
-% (in this case, the number of vertices is >5000)
-% Average across regions
-% -------------------------------------
-if size(resout,1)>5000
-  load ~/pupmod/proc/aal_labels.mat
-  reg_idx = 1:90;
-  fprintf('Combining atlas regions ...\n')
-  for ireg = reg_idx
-    ireg
-    idx{ireg} = find(aal_labels==ireg);
-  end
-  for i = 1 : size(idx,2)
-    for j = 1 : size(idx,2)
-      if i == j; fc(i,j) = nan; continue; end
-      clear tmp
-      for ii = 1 : length(idx{i})
-        tmp(ii) = squeeze(tanh(mean(atanh(resout(idx{i}(ii),idx{j})),2)));
-      end
-      fc(i,j) = squeeze(tanh(mean(atanh(tmp))));
-    end
-  end
-  resout=fc;
-end
-% -------------------------------------
-
 
 

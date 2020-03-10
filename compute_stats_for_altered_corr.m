@@ -180,7 +180,7 @@ if strcmp(para, 'collect_result')
     Rmax_n = max(cat(2,R_n,R_p),[],2);
     Rmax_p = max(cat(2,R_n,R_p),[],2);
 
-    for ifreq = 1:size(fc,5)
+    for ifreq = 1:size(fc,5)tmat
       fprintf('Obtaining corrected p-values: freq%d ...\n',ifreq)
       for irank = 1 : para.nperm    
         Dmax_p(irank,ifreq)     = perm.tperm_p( R_p(:,ifreq) == Rmax_p(irank), ifreq, 1);

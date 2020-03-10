@@ -24,7 +24,7 @@ if nargin<3;method=1;end
 [n,m]=size(p);
 
 if m>1
-    error('p must be a column vector')
+    dberror('p must be a column vector')
 end
 
 

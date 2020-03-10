@@ -3,12 +3,14 @@ function [filt, pow] = tp_beamformer(Cf_real,lf,para)
 % Compute a joint filter for all conditions
 
 % input:
-% dat:    complex cross spectrum
+% dat:    (real part of the complex) cross spectral density matrix
 % lf:     leadfield
 % reg:    regularization parameter (default is set below)
 
 % regularization parameter
-lambda = sum(diag(Cf_real))*para.reg; 
+
+% lambda = sum(diag(Cf_real))*para.reg; 
+lambda = para.reg*sum(diag(Cf_real))/size(Cf_real,1); 
 
 invCf_real = pinv(Cf_real + lambda * eye(size(Cf_real)));
 

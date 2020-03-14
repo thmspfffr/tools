@@ -1,12 +1,8 @@
-
 function resout=tp_data2orthopowcorr_wavelet(data,filt,para)
 % calculates power correlation after orthogonalization between two sets of brain
-% voxels. Usually, these two sets are either identical (then the rsult is
-% for all pairs) or one set consists of a single voxel which is taken as
-% seed. Data are epoched, with all epeochs (i.e. trials) stacked on top of each other.
-% Each epoch is further divided into segments. Coefficients in the Fourier-domain
-% are calculated for each segment. Thus the segment length determines the
-% frequency resolution.
+% voxels. Each epoch (usually the entire data set) is  divided into 
+% segments. Coefficients in the Fourier-domain are calculated for each segment
+% using Morelets wavelets.
 %
 % usage:
 % [resout]=tp_data2orthopowcorr_wavelet(data,f,filt)
@@ -18,6 +14,15 @@ function resout=tp_data2orthopowcorr_wavelet(data,filt,para)
 %
 % output
 % resout: M1xM2 matrix of power correlations after orthogonalization.
+%
+% Implementation of Hipp et al. (2012) Nature Neuroscience
+% Original code by Guido Nolte, UKE Hamburg
+% Adapted by Thomas Pfeffer, UKE Hamburg
+% ----------------------------------
+% Note: this implementaiton yields numerically similar (equivalent)
+% results as fieldtrip, but the computation is faster.
+% (original implementation by G. Nolte does not include log-transform)
+% ----------------------------------
 
 scale=sqrt(nanmean(nanmean(data.^2)));
 data=data./scale;
@@ -55,8 +60,6 @@ for j=1:nseg
   for i1=1:size(filt,2)
     x1=datasf1(i1);
     x2=imag(datasf1*conj(x1)./abs(x1));
-%     y1=abs(x1)^2;
-%     y2=abs(x2).^2;
 % log-transform power as in hipp 2012 (10-03-2020)
     y1=log10(abs(x1)^2);
     y2=log10(abs(x2).^2);

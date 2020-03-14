@@ -54,8 +54,8 @@ for j=1:nseg
   for i1=1:size(dloc2,2)
     x1=dataf(i1);
     x2=imag(dataf*conj(x1)./abs(x1));
-    y1=abs(x1)^2;
-    y2=abs(x2).^2;
+    y1=log10(abs(x1)^2);
+    y2=log10(abs(x2).^2);
     if kk==1
       res1(i1,:)=y1*y2;
       res2(i1,:)=y1;

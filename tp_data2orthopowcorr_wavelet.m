@@ -1,4 +1,4 @@
-function resout=tp_data2orthopowcorr_wavelet(data,filt,para)
+function [resout,variance] = tp_data2orthopowcorr_wavelet(data,filt,para)
 % calculates power correlation after orthogonalization between two sets of brain
 % voxels. Each epoch (usually the entire data set) is  divided into 
 % segments. Coefficients in the Fourier-domain are calculated for each segment
@@ -78,7 +78,11 @@ for j=1:nseg
     end
   end
   
+  datvar(j,:) = abs(datasf1).^2;
+  
 end
+
+variance = var(datvar);
 % -------------------------------------
 res1=res1/kk;
 res2=res2/kk;

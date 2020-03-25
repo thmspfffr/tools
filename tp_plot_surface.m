@@ -70,6 +70,8 @@ for i = [1 2 3 4]%size(positions,1)
     set(aa,'XLim',[spat_range(1,1) spat_range(2,1)])
     set(aa,'Outerposition',[0.40 0.45 0.2447 0.4491])
     set(aa,'YLim',[spat_range(1,2)-1.8 spat_range(2,2)+1.8])
+    
+    
   elseif i == 2
     set(aa,'XLim',[spat_range(1,2) spat_range(2,2)])
     set(aa,'Outerposition',[0.365 0.13 0.2648 0.4341])

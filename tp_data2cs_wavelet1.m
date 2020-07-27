@@ -1,5 +1,5 @@
 
-function [dataf, cs]=tp_data2cs_wavelet(data,segleng,segshift,epleng,f,fsample)
+function [dataf, cs]=tp_data2cs_wavelet1(data,f,fsample)
 % calculates cross-spectrum and coherence based on a wavelet using
 % a Hanning window for given frequeny
 %
@@ -17,15 +17,14 @@ function [dataf, cs]=tp_data2cs_wavelet(data,segleng,segshift,epleng,f,fsample)
 % cs: cross-spectrum 
 % coh: coherency (complex)
 % ss: the complex wavelet
+[~,ff,opt]=tp_mkwavelet(f, .5, fsample);
 
-% [~,ff,opt]=tp_mkwavelet(f, .5, fsample);
-
-% segleng = round(400/(ff(2)-ff(1)));
-% segshift = floor(segleng / 2);
+segleng = round(400/((ff(2)-ff(1))/2));
+segshift = floor(segleng / 2);
 % segleng = opt.n_win;
 % segshift = opt.n_shift;
-% epleng=size(data,1);
-% 
+epleng=size(data,1);
+
 nn=(1:segleng)'-segleng/2;
 mywin=hanning(segleng);
 s1=cos(nn*f*2*pi/fsample).*mywin;
@@ -57,7 +56,7 @@ for i=1:nep;
         dataf(:,j)=transpose(sum(dloc2.*ss));
          kk=kk+1;
          if kk==1;
-             cs=dataf(:,j)*dataf(:,j)';
+             cs=dataf*dataf(:,j)';
          else
               cs=cs+dataf(:,j)*dataf(:,j)';
          end

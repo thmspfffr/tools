@@ -1,4 +1,4 @@
-function [csd,nan_count] = tp_compute_csd_wavelets(data,para)
+function [csd,dataf,nan_count] = tp_compute_csd_wavelets(data,para)
 % compute complex cross spectral density matrix based on morlets wavelets
 % data: sensor level (Nchan x Ntimes)
 % para: freq = center frequency [Hz]
@@ -25,13 +25,20 @@ for j=1:nseg
   if any(isnan(dloc2(1,:)))
     warning('NaN detected')
     nan_count = nan_count + 1;
+    dataf(:,j) = nan(size(data,1),1);
     continue
   end
   
   kk=kk+1;
   
-  dataf_4csd(:,j)=dloc2*wavelet;
+  dataf(:,j)=dloc2*wavelet;
+  
+  if kk == 1
+    csd = dataf(:,j)*dataf(:,j)';
+  else
+    csd = csd + dataf(:,j)*dataf(:,j)';
+  end
   
 end
 
-csd = dataf_4csd*dataf_4csd';
+csd = csd/kk;

@@ -20,7 +20,7 @@ function [resout,variance] = tp_data2orthopowcorr_wavelet(data,filt,para)
 % Adapted by Thomas Pfeffer, UKE Hamburg
 % ----------------------------------
 % Note: this implementaiton yields numerically similar (equivalent)
-% results as fieldtrip, but the computation is slightly faster.
+% results as fieldtrip, but the computation is faster.
 % (original implementation by G. Nolte does not include log-transform)
 % ----------------------------------
 
@@ -60,6 +60,7 @@ for j=1:nseg
   for i1=1:size(filt,2)
     x1=datasf1(i1);
     x2=imag(datasf1*conj(x1)./abs(x1));
+% log-transform power as in hipp 2012 (10-03-2020)
     y1=log10(abs(x1)^2);
     y2=log10(abs(x2).^2);
     if kk==1

@@ -2,10 +2,10 @@
 % Add oscillation on top
 % See how this affects DFA exponent and fluctuation function
 
-ampl = 0.2;
-foi_range = 0.05:0.05:0.5;
+ampl = .5;
+foi_range = 0.5;
 figure_w;
-for ifoi = 1 : 9
+for ifoi = 1 
   len = 100000;
   fs = 100;
   dt = 1/fs;
@@ -46,4 +46,16 @@ x = ffGn(len,0.9,0.5,0);
   
 end
 
+
+figure_w;
+
+[px,fx]=pwelch(x1(:),[],0,0:0.1:5,100)
+
+subplot(1,2,1)
+plot(fx,px);
+
+[px,fx]=pwelch(x1(:),hanning(1000),0,0:0.1:5,100)
+
+subplot(1,2,2)
+plot(fx,px);
 

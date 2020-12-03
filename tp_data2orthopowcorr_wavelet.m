@@ -1,27 +1,25 @@
 function [resout,variance] = tp_data2orthopowcorr_wavelet(data,filt,para)
-% calculates power correlation after orthogonalization between two sets of brain
-% voxels. Each epoch (usually the entire data set) is  divided into 
+% tp_data2orthopowcorr_wavelet calculates power correlation after orthogonalization 
+% between two sets of voxels. Each epoch (usually the entire data set) is  divided into 
 % segments. Coefficients in the Fourier-domain are calculated for each segment
 % using Morelets wavelets.
-%
-% usage:
-% [resout]=tp_data2orthopowcorr_wavelet(data,f,filt)
-%
-% input:
+% ----------------------------------
+% INPOUT
+% ----------------------------------
 % data: TxN data matrix for T time points and N channels
-% f:    Frequency of interest (in Hz)
 % filt: Spatial filter
-%
-% output
-% resout: M1xM2 matrix of power correlations after orthogonalization.
-%
+% para.freq:    Center frequency (in Hz)
+% para.fsample: Sampling rate
+% ----------------------------------
+% OUTPUT
+% ----------------------------------
+% resout: M1xM2 matrix of power correlations after orthogonalization
+% variance: variance of the amplitude envelopes (M1x1)
+% --------------------------------------------------------------------
 % Implementation of Hipp et al. (2012) Nature Neuroscience
+% ----------------------------------
 % Original code by Guido Nolte, UKE Hamburg
 % Adapted by Thomas Pfeffer, UKE Hamburg
-% ----------------------------------
-% Note: this implementaiton yields numerically similar (equivalent)
-% results as fieldtrip, but the computation is slightly faster.
-% (original implementation by G. Nolte does not include log-transform)
 % ----------------------------------
 
 scale=sqrt(nanmean(nanmean(data.^2)));
@@ -36,7 +34,7 @@ res5=zeros(size(filt,2),size(filt,2),'single');
 % DEFINE WAVELETS
 % ----------------------------------
 octave = 0.5; % Frequency resolution
-[wavelet,f,opt]=tp_mkwavelet(para.freq,octave,para.fsample);
+[wavelet,opt]=tp_mkwavelet(para.freq,octave,para.fsample);
 % ----------------------------------
 
 nseg=floor((size(data,2)-opt.n_win)/opt.n_shift+1);

@@ -1,6 +1,6 @@
-exitfunction [hh,hii]=showmri_transp(mri,para,varargin);
+function [hh,hii,clims]=showmri_transp(mri,para,varargin);
 % shows mri-slices eventually plus sources 
-% usage:  [hh,hii]=showmri(mri,para,source1,source2,...);
+% usage:  [hh,hii]=showmri_transp(mri,para,source1,source2,...);
 % 
 % input:
 % mri in general complicated structure containing information about 
@@ -76,7 +76,7 @@ exitfunction [hh,hii]=showmri_transp(mri,para,varargin);
 %                      input argument corresponds to one set of sources).
 %      colormaps       cell array, indicating the colormaps for sources
 %                      which are valued (4 columns). E.g. 
-%                      para.colormaps={'autumn','hot','copper','cool'} r','g','y'} if 
+%                      para.colormaps={'autumn','hot','copper','cool'} if 
 %                      you have three such sets of sources. (One source
 %                      input argument corresponds to one set of sources).
 %                      As default the colomaps 'hot' 'copper' 'cool' 
@@ -113,7 +113,8 @@ exitfunction [hh,hii]=showmri_transp(mri,para,varargin);
 % hhi indices of shown sources (sources may fall outside 
 %     the shown slices, are not shown and the handles would 
 %     get confused)
-% ???
+% �
+clims=[];
 data=mri.data;
 scales=diag(mri.scales);
 nnn=size(data);
@@ -194,7 +195,7 @@ for i=1:nval
 end
 
            
-   colors_x={'b','r','g','c','m','y'};w=[1,1,.999];
+colors_x={'b','r','g','c','m','y'};w=[1,1,.999];
      
 trcut = 2;
 dslice_shown=1;
@@ -300,6 +301,9 @@ if nargin>1
  end
   if isfield(para,'colorbars');
        colorbars=para.colorbars;
+  end
+  if isfield(para,'colorbar');
+       colorbars=para.colorbar;
  end
  if isfield(para,'dotveccolor');
    if length(para.dotveccolor)<ndotvec;
@@ -308,9 +312,15 @@ if nargin>1
    for i=1:ndotvec
         colors{i}=para.dotveccolor{i};
    end
+ else
+     for i=1:ndotvec
+        colors{i}=colors_x{mod(i-1,length(colors_x))+1};
+    end
  end
- if isfield(para,'mydipmarkersizes');
-   mydipmarkersizes=para.mydipmarkersizes;
+ if isfield(para,'mydipmarkersize');
+   mydipmarkersize=para.mydipmarkersize;
+   mydipmarkersizes = mydipmarkersize*ones(nss, 1);
+
  end
  if isfield(para,'colors_x');
    colors_x=para.colors_x;
@@ -324,9 +334,7 @@ end
  end
 end
 
-    for i=1:ndotvec
-        colors{i}=colors_x{mod(i-1,length(colors_x))+1};
-    end
+    
 
 
 if length(limits_within)==0;
@@ -351,6 +359,7 @@ else
 end
 
 alloris{1}='sagittal';alloris{2}='coronal';alloris{3}='axial';
+
 
 for kori=1:nkori;
     if nkori==3
@@ -404,7 +413,7 @@ if nn==1 & nval<3
     else
         ncol=1;
     end
-    ncolb=1;
+    ncolb=ncol;
 end
 
 if colorbars==1 & nkori==1;
@@ -415,26 +424,15 @@ else
     nsubplot=1000;
 end
 
-if isfield(para,'nfig')
-  nn = para.nfig;
-else
-  nn = 1 : nn;
-end
-
-for k=nn
+for k=1:nn
  zloc=loclimits(3,1)+(k-1)*dslice_shown;
  iloc=round(zloc/dslice)+1;
  if nsubplot>1
      if nkori==3
         %h=subplot(2,2,subplotstart+kori);
-        nnncols=max([4 nsubplotrows+1]);
-%         h=subplot(nsubplotrows,nnncols,subplotstart+kori);
-        h=figure;
-        set(gcf,'color','w')
+        h=subplot(nsubplotrows,nsubplotrows+2,subplotstart+kori);
      else 
-%         h=subplot(ncolb,ncol,k);
-        h=figure;
-        set(gcf,'color','w')
+        h=subplot(ncolb,ncol,k);
      end
  else
      h=gca;
@@ -449,9 +447,8 @@ for k=nn
        dataloc=squeeze(data(:,:,iloc));  
   end
   dataloc=dataloc'; 
-  imagesc(x,y,-dataloc); %axis equal
-%   error('!')
-  axis equal tight
+  imagesc(x,y,-dataloc); axis image off
+  
   %contourf(x,y,-dataloc,50);
   %hx=surface(x,y,0*dataloc,-dataloc);get(hx)
   
@@ -470,15 +467,13 @@ for k=nn
   end
   
   h=gca;
-  if ~isfield(para,'nfig') & nn==1;
+  if nn==1;
       h0=h;
-  elseif ~isfield(para,'nfig')
-     h0=h;
   end
-%   set(h,'drawmode','fast');
+  %set(h,'drawmode','fast');
 
-%   set(gca,'fontweight','bold'); 
-%   set(gca,'fontsize',12);
+  set(gca,'fontweight','bold'); 
+  set(gca,'fontsize',12);
   %contourf(x,y,-dataloc);
   %title(num2str(k));
   colormap('gray');
@@ -487,11 +482,11 @@ for k=nn
       %p=[p(1) p(2) 1.8*p(3) p(4)*.9];
       px=[p(1)-.05 p(2)+.1 1.3*p(3) p(4)*.7];
       px=[p(1)-.05 p(2)+.001 1.1*p(3) p(4)*1.1];
-%       set(h,'position',px);
+      set(h,'position',px);
   else
       %p=[p(1) p(2) 1.2*p(3) p(4)*1.2];
       px=[p(1) p(2) p(3)*1.2 p(4)*1.2];
-%       set(h,'position',px);
+      set(h,'position',px);
   end
   
   set(gca,'ydir','normal')
@@ -501,8 +496,8 @@ for k=nn
   if index==3
     set(gca,'ydir','reverse');
   end
-  axis equal tight
-%   axis([loclimits(1,1) loclimits(1,2) loclimits(2,1) loclimits(2,2)]); 
+  % axis equal
+  axis([loclimits(1,1) loclimits(1,2) loclimits(2,1) loclimits(2,2)]); 
  
  
    idotvec=0;
@@ -519,7 +514,6 @@ for k=nn
      else
           ii=abs(zpos-zloc)<dslice_shown2/2;
      end
-     sign = para.sign(ii);
      if ~isempty(find(ii))
        mii = max(zpos(ii));
        mii = abs(zpos-mii) < 1e-2;
@@ -572,7 +566,6 @@ for k=nn
          source_val_loc(iu2, 1) = mean(source_loc(cell_ind{iu2},4));
        end
      end
-%      error('!')
      hold on;
      if length(source_pos)>0 
            if ndum==3
@@ -580,54 +573,38 @@ for k=nn
            mydotstyle=strcat(colors{idotvecs(kk)},'.');
            plot(source_pos(:,1),source_pos(:,2),mydotstyle,'markersize',mydotmarkersize);
        elseif ndum==4;
-           
-            
-            ival=ivals(kk);
-            c=cal{ival};
-            nc=length(c);
-
-%             idx = source_val_loc<0.055;
-            sign = sign(newind);
-          
-
             xx = source_pos(:, 1);
             yy = source_pos(:, 2);
+            if length(xx)>2;
             tri = delaunay(xx, yy);
             z = reshape(cat(3, xx(tri)', yy(tri)'), [], 2);
             [aa, iii, jj] = unique(z, 'rows');
+            
+            ival=ivals(kk);
+%           [ng,ndum]=size(source_loc); 
+            c=cal{ival};
+            nc=length(c);
+
             [sl iii] = sortrows(source_pos);
-    
-
+            
+%             msv = max(source_val);
+%kk=kk
+%length(colmax)
             msv = colmax{kk}-colmin{kk};
-                    
-            source_val_loc = source_val_loc(iii);   
             
-            minmax = linspace(min(source{1}(:,4)),max(source{1}(:,4)),256);
-            
-            cols = linspace(colmin{kk},colmax{kk},256);
-            
-            for i = 1 : length(source_val_loc)
-              [~,idx]=min(abs(cols-source_val_loc(i)));
-              source_col(i,:) = c(idx,:);
-            end
-            
-%             source_col = c(min(floor((nc-1).*(source_val_loc-colmin{kk})/msv)+1, size(c, 1)), :);
-            
-            
-
+            source_val_loc = source_val_loc(iii);            
+            source_col = c(min(floor((nc-1).*(source_val_loc-colmin{kk})/msv)+1, size(c, 1)), :);
             source_alpha = source_val_loc./msv;
-%         source_alpha = round(sign);
-%             source_alpha(idx) = 0;
             coval = reshape(source_col(jj, :), 3, [], 3);
-
             source_alpha = reshape(source_alpha(jj, :),[],1);
-            sign = sign(jj);
-            
-            alp = 2*trcut*abs(source_alpha).*round(sign);
-            
+%             source_alpha=ones(size(source_alpha,1),1);
             patch(xx(tri)', yy(tri)', coval, 'edgecolor', 'none', ...
-                'FaceVertexAlphaData', source_alpha, 'facealpha', 'interp')
+                'FaceVertexAlphaData', 2*trcut*abs(source_alpha), 'facealpha', 'interp')
             alim([0 1]);
+            
+            
+           end
+           
        elseif ndum==6;
          idotvec=idotvec+1;
          if strcmp(dipshow,'quiver');
@@ -693,7 +670,9 @@ for k=nn
 end
 end
 
-if ~isfield(para,'nfig') & nval>0 & colorbars==1;
+
+
+if nval>0 & colorbars==1;
   
   hold on;
   for kk=1:nval
@@ -701,8 +680,7 @@ if ~isfield(para,'nfig') & nval>0 & colorbars==1;
       nc=length(c); 
       if nkori==3
           %subplot(2,2,4);
-          nnncols=max([4 nsubplotrows+1]);
-          subplot(nsubplotrows,nnncols,subplotstart+4);
+          hs=subplot(nsubplotrows,nsubplotrows+2,subplotstart+4);
       else
 %           ncolb=ncolb
 %           ncol=ncol
@@ -711,7 +689,7 @@ if ~isfield(para,'nfig') & nval>0 & colorbars==1;
 %           kk=kk
             
             h = subplot(ncolb,ncol,nn+kk);
-        end
+      end
       nval=nval;
       %colormap hot; 
       caxis('manual')
@@ -723,14 +701,11 @@ if ~isfield(para,'nfig') & nval>0 & colorbars==1;
       for i=1:nc
         M(i,1,:)=c(i,:);
       end
-      
-      imagesc(x,y,M);
-      axis equal
-      set(gca,'ydir','normal');
+      hi=imagesc(x,y,M);
+      set(gca,'ydir','normal');  
       %get(gca)
       P=get(gca,'position');
-      
-      
+     
       if nkori==3
           %P0=get(h0,'position');
           %P0=[P0(1) P0(2) (1.1+(kk-1)*.2)*P0(3) P0(4)];
@@ -741,7 +716,7 @@ if ~isfield(para,'nfig') & nval>0 & colorbars==1;
           %P0=get(h0,'position');
           %P0=[P0(1) P0(2) (1.1+(kk-1)*.2)*P0(3) P0(4)];
           %set(h0,'position',P0);
-         PP=[P(1)+0+(nval-kk)*.12 P(2)+.17 .15*P(3) P(4)*.7];
+         PP=[P(1)+(nval-kk)*.12 P(2)+.1 .15*P(3) P(4)*.7];
          %PP=P;
          %drawnow
       elseif nn==1 & nval>2
@@ -754,6 +729,7 @@ if ~isfield(para,'nfig') & nval>0 & colorbars==1;
       end
       set(gca,'position',PP);
       set(gca,'xtick',[]);
+      
       set(gca,'fontweight','bold','fontsize',12);
 %       
 %       set(gca,'xtick',[]);
@@ -768,8 +744,14 @@ if ~isfield(para,'nfig') & nval>0 & colorbars==1;
 %       im = imagesc(x, y, 1-ct);
 %       set(gca,'ydir','normal');
 %       set(gca,'xtick',[], 'ytick', yt, 'yticklabel', {});
+      
   end
 end
-
+%keyboard;
+if exist('colmin')
+clims=[colmin{:} colmax{:}];
+end
+set(gcf,'color','w');
+%hh=gca;
 return;
 

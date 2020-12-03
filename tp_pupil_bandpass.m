@@ -1,5 +1,5 @@
 function y = tp_pupil_bandpass(x,bp,fsample,k) 
- k = 4;
+%  k = 2;
  fnq = fsample/2;
  hil_hi = bp(1);
  hil_lo = 400;
@@ -10,7 +10,7 @@ function y = tp_pupil_bandpass(x,bp,fsample,k)
 
 clear bhil ahil hil_Wn hil_hi hil_lo
 
-k = 4;
+% k = 2;
 hil_hi = bp(2);
 hil_lo = 400;
 fnq = fsample/2;

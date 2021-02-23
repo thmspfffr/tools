@@ -1,4 +1,4 @@
-function [resout,variance] = tp_data2orthopowcorr_wavelet(data,filt,para)
+function [resout,variance,cov] = tp_data2orthopowcorr_wavelet(data,filt,para)
 % tp_data2orthopowcorr_wavelet calculates power correlation after orthogonalization 
 % between two sets of voxels. Each epoch (usually the entire data set) is  divided into 
 % segments. Coefficients in the Fourier-domain are calculated for each segment
@@ -13,13 +13,14 @@ function [resout,variance] = tp_data2orthopowcorr_wavelet(data,filt,para)
 % ----------------------------------
 % OUTPUT
 % ----------------------------------
-% resout: M1xM2 matrix of power correlations after orthogonalization
+% resout:   M1xM2 matrix of power correlations after orthogonalization
 % variance: variance of the amplitude envelopes (M1x1)
+% cov:      orthogonalized covariance (added 22-02-21, rev1)
 % --------------------------------------------------------------------
 % Implementation of Hipp et al. (2012) Nature Neuroscience
 % ----------------------------------
 % Original code by Guido Nolte, UKE Hamburg
-% Adapted by Thomas Pfeffer, UKE Hamburg
+% Adapted by Thomas Pfeffer, UKE Hamburg/UPF Barcelona
 % ----------------------------------
 
 scale=sqrt(nanmean(nanmean(data.^2)));
@@ -34,7 +35,7 @@ res5=zeros(size(filt,2),size(filt,2),'single');
 % DEFINE WAVELETS
 % ----------------------------------
 octave = 0.5; % Frequency resolution
-[wavelet,opt]=tp_mkwavelet(para.freq,octave,para.fsample);
+[wavelet,opt]=tp_mkwavelet(para.freq,octave,para.fsample,para.overlap);
 % ----------------------------------
 
 nseg=floor((size(data,2)-opt.n_win)/opt.n_shift+1);
@@ -67,11 +68,11 @@ for j=1:nseg
       res4(i1,:)=y1^2;
       res5(i1,:)=y2.^2;
     else
-      res1(i1,:)=res1(i1,:)+y1*y2;
-      res2(i1,:)=res2(i1,:)+y1;
-      res3(i1,:)=res3(i1,:)+y2;
-      res4(i1,:)=res4(i1,:)+y1^2;
-      res5(i1,:)=res5(i1,:)+y2.^2;
+      res1(i1,:)=res1(i1,:)+y1*y2; % E[xy]
+      res2(i1,:)=res2(i1,:)+y1;    % E[x]
+      res3(i1,:)=res3(i1,:)+y2;    % E[y]
+      res4(i1,:)=res4(i1,:)+y1^2;  % E[x^2]
+      res5(i1,:)=res5(i1,:)+y2.^2; % E[y^2]
     end
   end
   
@@ -90,6 +91,9 @@ res5=res5/kk;
 % resout is asymetrical (see hipp 2012), resout needs to be averaged
 resout=(res1-res2.*res3)./(sqrt((res4-res2.^2).*(res5-res3.^2))+eps);
 resout=tanh((atanh(resout)./2 + atanh(resout)'./2));
+% covariance
+cov=res1-res2.*res3;
+cov=cov./2 + cov'./2;
 % -------------------------------------
 % REDUCE IF SIZE OF GRID IS INDICATIVE OF AAL PARCELATION
 % (in this case, the number of vertices is >5000)
@@ -109,11 +113,14 @@ if size(resout,1)>5000
       clear tmp
       for ii = 1 : length(idx{i})
         tmp(ii) = squeeze(tanh(mean(atanh(resout(idx{i}(ii),idx{j})),2)));
+        tmp2(ii) = squeeze(mean(cov(idx{i}(ii),idx{j}),2));
       end
-      fc(i,j) = squeeze(tanh(mean(atanh(tmp))));
+      tmp_fc(i,j) = squeeze(tanh(mean(atanh(tmp))));
+      tmp_cov(i,j) = squeeze(mean(tmp2));
     end
   end
-  resout=fc;
+  resout=tmp_fc;
+  cov = tmp_cov;
 end
 % -------------------------------------
 

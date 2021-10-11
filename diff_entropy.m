@@ -4,7 +4,7 @@ function hc = diff_entropy(cov)
 % Takes covariance matrix as input, outputs diff entropy (hc)
 % -------------
 
-cov(isnan(cov))=1;
+% cov(isnan(cov))=1;
 s       = svd(cov);
 logdetc = log(prod(s(s>0.00001)));
 K       = sum(s>0.00001);

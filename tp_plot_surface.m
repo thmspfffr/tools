@@ -71,7 +71,6 @@ for i = [1 2 3 4]%size(positions,1)
     set(aa,'Outerposition',[0.40 0.45 0.2447 0.4491])
     set(aa,'YLim',[spat_range(1,2)-1.8 spat_range(2,2)+1.8])
     
-    
   elseif i == 2
     set(aa,'XLim',[spat_range(1,2) spat_range(2,2)])
     set(aa,'Outerposition',[0.365 0.13 0.2648 0.4341])
@@ -81,6 +80,8 @@ for i = [1 2 3 4]%size(positions,1)
     set(aa,'ZLim',[spat_range(1,3) spat_range(2,3)])
     set(aa,'XLim',[spat_range(1,1) spat_range(2,1)])
     set(aa,'OuterPosition',[0.58 0.25 0.3 0.5])
+%     axis([-7.1200 0 -11 7.4183 -5.5  8.2127])
+
   elseif i == 4
     axis tight off
     set(aa,'YLim',[spat_range(1,2) spat_range(2,2)])
@@ -92,7 +93,6 @@ for i = [1 2 3 4]%size(positions,1)
     %     elseif i == 6
     %     set(aa,'XLim',[spat_range(1,2) 0])
   end
-  
 end
 
 % if filename is provided, crop figure

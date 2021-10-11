@@ -590,14 +590,24 @@ for k=1:nn
 %             msv = max(source_val);
 %kk=kk
 %length(colmax)
+
+%             source_val_loc = source_val_loc(iii);            
+%             source_col = c(min(floor((nc-1).*(source_val_loc-colmin{kk})/msv)+1, size(c, 1)), :);
+%             source_alpha = source_val_loc./msv;
+%             coval = reshape(source_col(jj, :), 3, [], 3);
+%             source_alpha = reshape(source_alpha(jj, :),[],1);
+%             
+            
             msv = colmax{kk}-colmin{kk};
             
             source_val_loc = source_val_loc(iii);            
             source_col = c(min(floor((nc-1).*(source_val_loc-colmin{kk})/msv)+1, size(c, 1)), :);
+%             source_alpha = ones(length(source_val_loc./msv),1);
+%             source_alpha = source_val_loc./(msv/2);
             source_alpha = source_val_loc./msv;
+%             source_alpha(source_alpha>0)=0.5;
             coval = reshape(source_col(jj, :), 3, [], 3);
             source_alpha = reshape(source_alpha(jj, :),[],1);
-%             source_alpha=ones(size(source_alpha,1),1);
             patch(xx(tri)', yy(tri)', coval, 'edgecolor', 'none', ...
                 'FaceVertexAlphaData', 2*trcut*abs(source_alpha), 'facealpha', 'interp')
             alim([0 1]);

@@ -16,7 +16,7 @@
 
 function [transdat, trans, translab] = tp_match_aal(para,varargin)
 
-addpath ~/Documents/MATLAB/fieldtrip-20160919/; ft_defaults
+% addpath ~/Documents/MATLAB/fieldtrip-20160919/; ft_defaults
 aal = ft_read_atlas('~/Documents/MATLAB/fieldtrip-20160919/template/atlas/aal/ROI_MNI_V4.nii');
 
 % exclude those regions in BCN definition
@@ -123,7 +123,6 @@ elseif strcmp(para.transfer,'to_bcn')
     for i = 1 : size(trans,1)
       translab{i} = aal.tissuelabel{trans(i,2)};
       for j = 1 : size(trans,1)
-        
         transdat(i,j,:) = dat(trans(i,2),trans(j,2),:);
         
       end

@@ -1,4 +1,4 @@
-function lab = tp_grid2yeo(grid)
+function [lab,yeo1mm] = tp_grid2yeo(grid)
 
 yeo1mm = ft_read_atlas('~/Documents/MATLAB/Yeo2011_7Networks_MNI152_FreeSurferConformed1mm.nii.gz')
 

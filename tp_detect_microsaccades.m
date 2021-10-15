@@ -1,10 +1,10 @@
-function y = tp_detect_microsaccades(x,fs)
+function y = tp_detect_microsaccades(x,fs,dur)
 
 % based on engbert et al. (2003) and fieldtrip code
 
 kernel = [1 1 0 -1 -1].*fs/6;
 y = [];
-thresh = 6;
+thresh = 8;
 
 
 x(isnan(x(:,1)),:)=[];
@@ -37,7 +37,7 @@ sacidx = reshape(j1(cut),2,[]);
 
 for k=1:size(sacidx,2);
   duration = sacidx(1,k):sacidx(2,k);
-  if size(duration,2) >= 12;
+  if size(duration,2) >= dur;
     % finding peak velocity by Pitagoras
     begtrl = sacsmp(duration(1,1));
     endtrl = sacsmp(duration(1,end));
